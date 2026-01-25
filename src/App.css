@@ -1,0 +1,44 @@
+.logo {
+    width: 100px;
+    height: 100px;
+}
+
+header {}
+
+.container {
+    margin-inline: auto;
+
+}
+
+.header-nav {
+    display: flex;
+    gap: 10px;
+}
+
+.button {
+    padding: 10px 30px;
+    /* border-radius: 10px; */
+    /* border: 2px solid var(--primary-color); */
+    cursor: pointer;
+}
+
+button.primary {
+    background-color: var(--primary-color);
+    color: white;
+    /* font-weight: bold; */
+}
+
+button.secondary {
+    background-color: var(--white-color);
+    color: var(--primary-color);
+    /* font-weight: bold; */
+}
+
+a.header-link {
+    text-decoration: none;
+    color: var(--link-color);
+}
+
+a.header-link.active {
+    color: var(--primary-color);
+}
