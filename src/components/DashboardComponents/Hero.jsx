@@ -6,7 +6,9 @@ import { FloatingComponent } from "../FloatingComponent"
 import { SearchIcon } from "lucide-react"
 import { ClipboardListIcon } from "lucide-react"
 import { Phone } from "lucide-react"
+import { useState } from "react"
 export const Hero = () => {
+    const [available, setAvailable] = useState(false)
     return <>
         {/* Left Details */}
         <div className="mt-4 relative  flex flex-col gap-10">
@@ -32,20 +34,28 @@ export const Hero = () => {
             <p>Become member of our hospital community? <button className="text-(--primary-color) cursor-pointer hover:underline">Sign up</button></p>
 
             {/* Form Find Doctor */}
-            <form className="p-4 relative z-20  shadow-[0_0_16px_8px_#00000024] text-(--default-color) bg-white md:w-fit rounded-2xl">
+            <form className="p-4 relative z-20  shadow-[0_0_16px_8px_#00000024] text-(--default-color) bg-white lg:w-fit rounded-2xl">
                 <h2 className="pl-3 font-semibold">Find a doctor</h2>
-                <div className="flex flex-col md:flex-row gap-6 mt-2">
+                <div className="flex flex-col lg:flex-row gap-6 mt-2">
                     <input type="text" className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-3 py-2 bg-gray-200" placeholder="Name of Doctor" />
                     <input type="text" className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-3 py-2 bg-gray-200" placeholder="Speciality" />
                     <div className="flex items-center gap-4">
-                        <label htmlFor="">Availability</label>
-                        <input type="checkbox" />
+                        <label htmlFor="availability" className="flex items-center  gap-2 cursor-pointer">Availability
+                            <div className="w-13 h-6  border rounded-full relative overflow-hidden">
+                                <div className={`absolute transition-all bg-(--primary-color) left-0 top-0 h-full ${available ? "w-full" : "w-0"} `}>
+
+                                </div>
+                                <div className={`h-[calc(100%-2px)] absolute transition aspect-square rounded-full border bg-(--white-color) left-0 top-1/2 -translate-y-1/2 ${available ? "translate-x-7.5 " : ""}`}></div>
+                            </div>
+                        </label>
+                        <input type="checkbox" id="availability" className="hidden" value={available} onChange={(e) => setAvailable(e.target.checked)} />
+
                     </div>
                     <Button className="" text={'Search'} primary={true} />
                 </div>
             </form>
             {/* Image Part */}
-            <div className="absolute w-110 aspect-square bottom-0 right-10 ">
+            <div className="absolute w-110 aspect-square bottom-0 right-10 hidden lg:block">
 
                 {/* Circle Background Layers */}
                 <div className="absolute inset-0 rounded-full border-20 border-white outline-20 outline-[#E7E7E7] overflow-hidden z-10">

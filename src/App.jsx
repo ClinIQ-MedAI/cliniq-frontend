@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import './App.css'
 import { DoctorLayout } from './components/DoctorLayout'
-import { DashboardPage } from './pages/DoctorPages/DashboardPage'
+import { DashboardPage } from './pages/DashboardPage'
 import { useState } from 'react'
 
 function App() {
