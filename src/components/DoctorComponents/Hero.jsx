@@ -1,13 +1,17 @@
 import { ArrowRight } from "lucide-react"
 import { Button } from "../Button"
 import { Play } from "lucide-react"
-
+import Banner from '/Banner.png'
+import { FloatingComponent } from "../FloatingComponent"
+import { SearchIcon } from "lucide-react"
+import { ClipboardListIcon } from "lucide-react"
+import { Phone } from "lucide-react"
 export const Hero = () => {
     return <>
         {/* Left Details */}
-        <div className="mt-4  flex flex-col gap-10">
+        <div className="mt-4 relative  flex flex-col gap-10">
             {/* Text */}
-            <div className="w-125 flex flex-col gap-4">
+            <div className="w-125 flex flex-col gap-4 relative z-20">
                 <h1 className="text-(--gray-color) text-4xl font-bold"><span className="text-(--primary-color)">We care</span><br />
                     about your health</h1>
                 <p className=" text-gray-400">
@@ -18,7 +22,7 @@ export const Hero = () => {
             {/* Appointment Buttons */}
             <div className="flex gap-2">
                 <Button text={'Book an appointment'} primary={true} Icon={ArrowRight} />
-                <button className="flex gap-2  w-[500px] items-center cursor-pointer ">
+                <button className="flex gap-2  w-125 items-center cursor-pointer ">
                     <div className=" cursor-pointer h-full aspect-square rounded-full p-2 bg-(--primary-color) outline-3 border-5 outline-[#C7C7C7] border-white flex justify-center items-center">
                         <Play className=" text-(--white-color) text-lg w-5 h-5" />
                     </div> <span>Watch videos</span>
@@ -28,7 +32,7 @@ export const Hero = () => {
             <p>Become member of our hospital community? <button className="text-(--primary-color) cursor-pointer hover:underline">Sign up</button></p>
 
             {/* Form Find Doctor */}
-            <form className="p-4   shadow-[0_0_16px_8px_#00000024] text-(--default-color) bg-white md:w-fit rounded-2xl">
+            <form className="p-4 relative z-20  shadow-[0_0_16px_8px_#00000024] text-(--default-color) bg-white md:w-fit rounded-2xl">
                 <h2 className="pl-3 font-semibold">Find a doctor</h2>
                 <div className="flex flex-col md:flex-row gap-6 mt-2">
                     <input type="text" className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-3 py-2 bg-gray-200" placeholder="Name of Doctor" />
@@ -41,7 +45,52 @@ export const Hero = () => {
                 </div>
             </form>
             {/* Image Part */}
-            {/* <div></div> */}
+            <div className="absolute w-110 aspect-square bottom-0 right-10 ">
+
+                {/* Circle Background Layers */}
+                <div className="absolute inset-0 rounded-full border-20 border-white outline-20 outline-[#E7E7E7] overflow-hidden z-10">
+
+                    <div className="absolute inset-0 bg-(--primary-color)"></div>
+
+                    <img src={Banner} style={{ clipPath: "inset(50% 0 0 0)" }} className="h-150 absolute -bottom-7 -right-5 object-cover " alt="" />
+
+                    <div className="absolute w-full h-full bg-linear-to-t from-(--primary-color) via-transparent to-transparent z-20"></div>
+                </div>
+                <div className="absolute inset-0 z-20 pointer-events-none">
+                    <img
+                        src={Banner}
+                        className="h-150 absolute -bottom-3 -right-5 object-cover"
+                        alt="Doctors"
+                        style={{ clipPath: "inset(0 0 50% 0)" }}
+                    />
+                </div>
+                <FloatingComponent
+                    title="Well Qualified doctors"
+                    text="Treat with care"
+                    Icon={SearchIcon}
+                    paragraphStyleClasses="text-gray-500 text-sm"
+                    classNames="bg-white absolute top-6 -left-24 shadow-xl px-5 py-4 rounded-2xl z-10 flex items-center gap-3"
+                />
+
+
+                <FloatingComponent
+                    title="Book an appointment"
+                    text="Online appointment"
+                    Icon={ClipboardListIcon}
+                    paragraphStyleClasses="text-gray-500 text-sm"
+
+                    classNames="bg-white absolute bottom-50 -left-24 shadow-xl px-5 py-4 rounded-2xl z-30 flex items-center gap-3"
+                />
+
+                <FloatingComponent
+                    title="Contact no"
+                    text="+9715123871325"
+                    Icon={Phone}
+                    paragraphStyleClasses="text-gray-800 font-medium text-sm"
+                    classNames="bg-white/60 backdrop-blur-md border border-white/50 absolute top-1/2 -right-20 shadow-xl px-5 py-4 rounded-2xl z-30 flex flex-row-reverse items-center gap-3 translate-y-[-50%]"
+                />
+
+            </div>
 
             {/* <div className="w-100">
 

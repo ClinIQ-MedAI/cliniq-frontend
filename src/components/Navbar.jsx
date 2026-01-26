@@ -12,7 +12,7 @@ export const Navbar = ({ setOpenSignUpForm }) => {
                 <nav className='header-nav'>
                     <Link className={`${pathname === "/" ? "active" : ""} header-link`} to={"/"}>Home</Link>
                     <Link className={`${pathname === "/service" ? "active" : ""} header-link`} to={"/service"}>Service</Link>
-                    <Link className={`${pathname === "/content" ? "active" : ""} header-link`} to={"/content"}>Content</Link>
+                    <Link className={`${pathname === "/doctors" ? "active" : ""} header-link`} to={"/doctors"}>Doctors</Link>
                     <Link className={`${pathname === "/about" ? "active" : ""} header-link`} to={"/about"}>About us</Link>
                     <Link className={`${pathname === "/contact" ? "active" : ""} header-link`} to={"/contact"}>Contact us</Link>
                 </nav>

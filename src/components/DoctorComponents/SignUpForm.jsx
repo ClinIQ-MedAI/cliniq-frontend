@@ -6,13 +6,13 @@ import { X } from "lucide-react"
 export const SignUpForm = ({ setOpenSignUpForm }) => {
     const [checked, setChecked] = useState(false)
     return (
-        <div className="fixed flex justify-center items-center top-0 left-0 w-full h-full bg-[#00000094]">
+        <div className="fixed flex z-100 justify-center items-center top-0 left-0 w-full h-full bg-[#00000094]">
 
             <form className="flex   relative items-center text-(--default-color) rounded-xl overflow-hidden">
                 <div className="absolute right-2 top-2 cursor-pointer" onClick={() => setOpenSignUpForm(false)}>
                     <X className="text-red-500" />
                 </div>
-                <div className="flex w-[1280px]">
+                <div className="flex w-7xl">
                     {/* Left */}
                     <div className="bg-(--primary-color) text-xl hidden lg:block w-2/5 p-10 text-white">
                         <span className="font-bold">Hospital</span> logo
