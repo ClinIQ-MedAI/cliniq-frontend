@@ -2,10 +2,10 @@ import { Outlet } from "react-router-dom";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 
-export const DoctorLayout = ({ setOpenSignUpForm }) => {
+export const DoctorLayout = ({ setOpenSignUpForm, setOpenLoginForm }) => {
 
     return <>
-        <Navbar setOpenSignUpForm={setOpenSignUpForm} />
+        <Navbar setOpenSignUpForm={setOpenSignUpForm} setOpenLoginForm={setOpenLoginForm} />
         <Outlet />
         <Footer />
     </>

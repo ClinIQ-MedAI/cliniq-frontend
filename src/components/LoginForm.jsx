@@ -5,7 +5,7 @@ import Doctor1 from '/Doctor1SignUp.png'
 import Doctor2 from '/Doctor2SignUp.png'
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion'
-export const SignUpForm = ({ setOpenSignUpForm }) => {
+export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
     const [checked, setChecked] = useState(false)
 
     return (
@@ -14,56 +14,40 @@ export const SignUpForm = ({ setOpenSignUpForm }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            onClick={() => setOpenSignUpForm(false)}
+            onClick={() => setOpenLoginForm(false)}
             className="fixed flex z-100 justify-center items-center top-0 left-0 w-full h-full bg-[#00000094]">
-
             <motion.form
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 25 }}
+                transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
                 onClick={(e) => e.stopPropagation()}
-                className="flex   relative items-center text-(--default-color) rounded-xl overflow-hidden">
-                <div className="absolute right-2 top-2 cursor-pointer" onClick={() => setOpenSignUpForm(false)}>
+                className="flex  mx-10   relative items-center text-(--default-color) rounded-xl overflow-hidden">
+                <div className="absolute right-2 top-2 cursor-pointer" onClick={() => setOpenLoginForm(false)}>
                     <X className="text-red-500" />
                 </div>
                 <div className="flex w-7xl">
                     {/* Left */}
                     <div className="bg-(--primary-color) text-xl hidden relative lg:block w-2/5 p-10 text-white">
                         <span className="font-bold">Hospital</span> logo
-                        <img src={Doctor1} className="absolute bottom-0 -left-15" alt="" />
-                        <img src={Doctor2} className="absolute bottom-0 right-0" alt="" />
+                        <img src={Doctor1} className="absolute bottom-0 -left-15 h-150" alt="" />
+                        <img src={Doctor2} className="absolute bottom-0 right-0 h-112.5" alt="" />
                     </div>
 
                     {/* Right */}
                     <div className="bg-(--white-color) p-10 w-full lg:w-3/5 pb-15">
-                        <h2 className="text-(--default-color) text-3xl font-semibold">Sign up For account</h2>
+                        <h2 className="text-(--default-color) text-3xl font-semibold">Log In Your Account</h2>
 
-                        <div className="mt-5 pr-40 flex flex-col">
-                            <div className="flex justify-between">
-                                <div className="flex flex-col">
-                                    <label htmlFor="">First Name</label>
-                                    <input type="text" placeholder="Your First Name" className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-5 py-4 bg-gray-200" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <label htmlFor="">Last Name</label>
-                                    <input type="text" placeholder="Your Last Name" className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-5 py-4 bg-gray-200" />
-                                </div>
-                            </div>
+                        <div className="mt-5 lg:pr-40 flex flex-col">
                             <div className="flex flex-col mt-4">
                                 <label htmlFor="">Email Address</label>
                                 <input type="text" placeholder="Enter Your email Address" className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-5 py-4 bg-gray-200" />
                             </div>
-                            <div className="flex justify-between  mt-4">
-                                <div className="flex flex-col">
-                                    <label htmlFor="">Password</label>
-                                    <input type="text" placeholder="Your Password" className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-5 py-4 bg-gray-200" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <label htmlFor="">Confirm Password</label>
-                                    <input type="text" placeholder="Confirm Your Password" className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-5 py-4 bg-gray-200" />
-                                </div>
+                            <div className="flex flex-col">
+                                <label htmlFor="">Password</label>
+                                <input type="text" placeholder="Your Password" className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-5 py-4 bg-gray-200" />
                             </div>
+
 
                             <div className="mt-4">
                                 <input type="checkbox" id="accept" className="hidden" onClick={() => setChecked(prev => !prev)} />
@@ -76,10 +60,13 @@ export const SignUpForm = ({ setOpenSignUpForm }) => {
                                 </label>
                             </div>
                             <button type={'submit'} className={`primary text-center mt-8 w-75 mx-auto justify-center rounded-lg border-2 border-(--primary-color) px-6 py-4 cursor-pointer gap-2 items-center flex`}>
-                                Sign Up
+                                Login
                             </button>
 
-                            <p className="flex justify-center mt-20">Already have an account ? <button className="text-(--primary-color) cursor-pointer hover:underline">Log in</button></p>
+                            <p className="flex justify-center mt-20">Don't have an account ? <button type="button" className="text-(--primary-color) cursor-pointer hover:underline" onClick={() => {
+                                setOpenLoginForm(false)
+                                setOpenSignUpForm(true)
+                            }}>Sign Up</button></p>
                         </div>
                     </div>
                 </div>

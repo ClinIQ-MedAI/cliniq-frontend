@@ -14,17 +14,17 @@ export const Hero = () => {
         <div className="mt-4 relative  flex flex-col gap-10">
             {/* Text */}
             <div className="w-125 flex flex-col gap-4 relative z-20">
-                <h1 className="text-(--gray-color) text-4xl font-bold"><span className="text-(--primary-color)">We care</span><br />
+                <h1 className="text-(--gray-color) text-4xl font-bold text-center md:text-left"><span className="text-(--primary-color)">We care</span><br />
                     about your health</h1>
-                <p className=" text-gray-400">
+                <p className=" text-gray-400 text-center md:text-left">
                     Good health is the state of mental, physical and social well being
                     and it does not just mean absence of diseases.
                 </p>
             </div>
             {/* Appointment Buttons */}
-            <div className="flex gap-2">
-                <Button text={'Book an appointment'} primary={true} Icon={ArrowRight} />
-                <button className="flex gap-2  w-125 items-center cursor-pointer ">
+            <div className="flex gap-2 w-100 lg:w-125">
+                <Button text={'Book an appointment'} classNames={'flex-1 '} primary={true} Icon={ArrowRight} />
+                <button className="flex gap-2 flex-1  items-center cursor-pointer ">
                     <div className=" cursor-pointer h-full aspect-square rounded-full p-2 bg-(--primary-color) outline-3 border-5 outline-[#C7C7C7] border-white flex justify-center items-center">
                         <Play className=" text-(--white-color) text-lg w-5 h-5" />
                     </div> <span>Watch videos</span>
@@ -55,7 +55,7 @@ export const Hero = () => {
                 </div>
             </form>
             {/* Image Part */}
-            <div className="absolute w-110 aspect-square bottom-0 right-10 hidden lg:block">
+            <div className="absolute lg:w-100 xl:w-110 aspect-square bottom-0 right-10 hidden lg:block">
 
                 {/* Circle Background Layers */}
                 <div className="absolute inset-0 rounded-full border-20 border-white outline-20 outline-[#E7E7E7] overflow-hidden z-10">
@@ -74,31 +74,33 @@ export const Hero = () => {
                         style={{ clipPath: "inset(0 0 50% 0)" }}
                     />
                 </div>
-                <FloatingComponent
-                    title="Well Qualified doctors"
-                    text="Treat with care"
-                    Icon={SearchIcon}
-                    paragraphStyleClasses="text-gray-500 text-sm"
-                    classNames="bg-white absolute top-6 -left-24 shadow-xl px-5 py-4 rounded-2xl z-10 flex items-center gap-3"
-                />
+                <div className="hidden xl:block">
+                    <FloatingComponent
+                        title="Well Qualified doctors"
+                        text="Treat with care"
+                        Icon={SearchIcon}
+                        paragraphStyleClasses="text-gray-500 text-sm"
+                        classNames="bg-white absolute top-6 -left-24 shadow-xl px-5 py-4 rounded-2xl z-10 flex items-center gap-3"
+                    />
 
 
-                <FloatingComponent
-                    title="Book an appointment"
-                    text="Online appointment"
-                    Icon={ClipboardListIcon}
-                    paragraphStyleClasses="text-gray-500 text-sm"
+                    <FloatingComponent
+                        title="Book an appointment"
+                        text="Online appointment"
+                        Icon={ClipboardListIcon}
+                        paragraphStyleClasses="text-gray-500 text-sm"
 
-                    classNames="bg-white absolute bottom-50 -left-24 shadow-xl px-5 py-4 rounded-2xl z-30 flex items-center gap-3"
-                />
+                        classNames="bg-white absolute bottom-50 -left-24 shadow-xl px-5 py-4 rounded-2xl z-30 flex items-center gap-3"
+                    />
 
-                <FloatingComponent
-                    title="Contact no"
-                    text="+9715123871325"
-                    Icon={Phone}
-                    paragraphStyleClasses="text-gray-800 font-medium text-sm"
-                    classNames="bg-white/60 backdrop-blur-md border border-white/50 absolute top-1/2 -right-20 shadow-xl px-5 py-4 rounded-2xl z-30 flex flex-row-reverse items-center gap-3 translate-y-[-50%]"
-                />
+                    <FloatingComponent
+                        title="Contact no"
+                        text="+9715123871325"
+                        Icon={Phone}
+                        paragraphStyleClasses="text-gray-800 font-medium text-sm"
+                        classNames="bg-white/60 backdrop-blur-md border border-white/50 absolute top-1/2 -right-20 shadow-xl px-5 py-4 rounded-2xl z-30 flex flex-row-reverse items-center gap-3 translate-y-[-50%]"
+                    />
+                </div>
 
             </div>
 

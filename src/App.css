@@ -11,7 +11,7 @@ header {}
 }
 
 .header-nav {
-    display: flex;
+    /* display: flex; */
     gap: 10px;
 }
 

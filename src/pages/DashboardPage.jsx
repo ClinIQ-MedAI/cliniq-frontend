@@ -5,7 +5,7 @@ import Microscope from '/Microscope.svg'
 import ChatCenter from '/ChatCenter.svg'
 import Ambulance from '/Ambulance.svg'
 import Chat from '/Chat.svg'
-import { SignUpForm } from "../components/DoctorComponents/SignupForm"
+import { SignUpForm } from "../components/SignUpForm"
 import { DoctorCard } from "../components/DoctorComponents/DoctorCard"
 import Doctor1 from '/Doctor1.png'
 import Doctor2 from '/Doctor2.png'
@@ -14,6 +14,7 @@ import Doctor4 from '/Doctor4.png'
 import { Button } from "../components/Button"
 import { useNavigate } from "react-router-dom"
 import { AnimatePresence } from "framer-motion"
+import { LoginForm } from "../components/LoginForm"
 const DoctorArray = [
     {
         imageUrl: Doctor1,
@@ -45,12 +46,25 @@ const DoctorArray = [
     },
 ]
 
-export const DashboardPage = ({ openSignUpForm, setOpenSignUpForm }) => {
+export const DashboardPage = ({ openSignUpForm, setOpenSignUpForm, openLoginForm, setOpenLoginForm }) => {
     const navigate = useNavigate()
 
     return <main className="container  px-(--padding-inline)">
-        <AnimatePresence >
-            {openSignUpForm && <SignUpForm setOpenSignUpForm={setOpenSignUpForm} key="signup-modal" />}
+        <AnimatePresence mode="wait">
+            {openSignUpForm && (
+                <SignUpForm
+                    key="signup-modal"
+                    setOpenLoginForm={setOpenLoginForm}
+                    setOpenSignUpForm={setOpenSignUpForm}
+                />
+            )}
+            {openLoginForm && (
+                <LoginForm
+                    key="login-modal"
+                    setOpenSignUpForm={setOpenSignUpForm}
+                    setOpenLoginForm={setOpenLoginForm}
+                />
+            )}
         </AnimatePresence>
         <Hero />
         <General head={"Our Medical Services"} paragraph={"We are dedicated to serve you best medical services"}>

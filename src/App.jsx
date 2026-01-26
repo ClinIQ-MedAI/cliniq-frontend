@@ -6,12 +6,18 @@ import { useState } from 'react'
 
 function App() {
   const [openSignUpForm, setOpenSignUpForm] = useState(false)
+  const [openLoginForm, setOpenLoginForm] = useState(false)
 
   return (<>
     <Router>
       <Routes>
-        <Route element={<DoctorLayout setOpenSignUpForm={setOpenSignUpForm} />}>
-          <Route path={"/"} element={<DashboardPage setOpenSignUpForm={setOpenSignUpForm} openSignUpForm={openSignUpForm} />} />
+        <Route element={<DoctorLayout setOpenSignUpForm={setOpenSignUpForm} setOpenLoginForm={setOpenLoginForm} />}>
+          <Route path={"/"} element={<DashboardPage
+            openLoginForm={openLoginForm}
+            setOpenLoginForm={setOpenLoginForm}
+            setOpenSignUpForm={setOpenSignUpForm}
+            openSignUpForm={openSignUpForm}
+          />} />
         </Route>
       </Routes>
     </Router>
