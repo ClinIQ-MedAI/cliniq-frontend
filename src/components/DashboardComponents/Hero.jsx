@@ -13,7 +13,7 @@ export const Hero = () => {
         {/* Left Details */}
         <div className="mt-4 relative  flex flex-col gap-10">
             {/* Text */}
-            <div className="w-125 flex flex-col gap-4 relative z-20">
+            <div className="md:w-125 flex flex-col gap-4 relative z-20">
                 <h1 className="text-(--gray-color) text-4xl font-bold text-center md:text-left"><span className="text-(--primary-color)">We care</span><br />
                     about your health</h1>
                 <p className=" text-gray-400 text-center md:text-left">
@@ -22,7 +22,7 @@ export const Hero = () => {
                 </p>
             </div>
             {/* Appointment Buttons */}
-            <div className="flex gap-2 w-100 lg:w-125">
+            <div className="flex gap-2 items-center  md:flex-row md:w-100 flex-col lg:w-125">
                 <Button text={'Book an appointment'} classNames={'flex-1 '} primary={true} Icon={ArrowRight} />
                 <button className="flex gap-2 flex-1  items-center cursor-pointer ">
                     <div className=" cursor-pointer h-full aspect-square rounded-full p-2 bg-(--primary-color) outline-3 border-5 outline-[#C7C7C7] border-white flex justify-center items-center">

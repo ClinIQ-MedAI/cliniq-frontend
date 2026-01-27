@@ -1,12 +1,82 @@
-import { Check } from "lucide-react"
-import { useState } from "react"
+
 import { X } from "lucide-react"
 import Doctor1 from '/Doctor1SignUp.png'
 import Doctor2 from '/Doctor2SignUp.png'
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion'
+import { useForm } from "react-hook-form"
+import api from "../apis/api"
+import API_ENDPOINTS from "../apis/endpoints"
+import toast from "react-hot-toast"
+import { Loader2 } from "lucide-react"
 export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
-    const [checked, setChecked] = useState(false)
+    const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm()
+
+    async function handleLoginSubmit(data) {
+        data
+
+
+        // send to api
+        try {
+
+            //  simulation
+            await new Promise((resolve) => setTimeout(() => resolve(), 1500))
+
+            // const errorToThrow = {
+            //     response: {
+            //         status: 400,
+            //         data: { message: "Password is incorrect" }
+            //     }
+            // };
+            // throw errorToThrow;
+
+
+            // real api
+            // const response = await api.post(API_ENDPOINTS.signup, combinedData, {
+            //     headers: { "Content-Type": 'application/json' }
+            // })
+
+            toast.success('user logged in successfully')
+            setOpenLoginForm(false)
+            // TODO: store token in localstorage or something else
+
+        } catch (error) {
+            console.log(error.response.data.message)
+            if (error.response) {
+                const status = error.response.status;
+                const serverMessage = error.response.data?.message || "An error occurred";
+                const msgLower = serverMessage.toLowerCase();
+                if (status === 400) {
+                    if (msgLower.includes('email')) {
+                        setError('email', { type: 'server', message: serverMessage });
+                    } else if (msgLower.includes('password')) {
+                        setError('password', { type: 'server', message: serverMessage });
+                    } else {
+                        setError('root', { type: 'server', message: serverMessage });
+                    }
+                } else if (status === 404) {
+                    setError('email', { type: 'server', message: serverMessage });
+                }
+                else if (status === 500) {
+                    setError('root', { type: 'server', message: "Server error. Please try again later." });
+                } else {
+                    setError("root", { type: "server", message: serverMessage });
+                }
+            }
+            else if (error.request) {
+                setError("root", {
+                    type: "server",
+                    message: "Network Error. Please check your internet connection."
+                });
+            } else {
+                setError("root", {
+                    type: "server",
+                    message: "Application Error: " + error.message
+                });
+            }
+        }
+
+    }
 
     return (
         <motion.div
@@ -22,6 +92,7 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
                 onClick={(e) => e.stopPropagation()}
+                onSubmit={handleSubmit(handleLoginSubmit)}
                 className="flex  mx-10   relative items-center text-(--default-color) rounded-xl overflow-hidden">
                 <div className="absolute right-2 top-2 cursor-pointer" onClick={() => setOpenLoginForm(false)}>
                     <X className="text-red-500" />
@@ -41,26 +112,20 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
                         <div className="mt-5 lg:pr-40 flex flex-col">
                             <div className="flex flex-col mt-4">
                                 <label htmlFor="">Email Address</label>
-                                <input type="text" placeholder="Enter Your email Address" className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-5 py-4 bg-gray-200" />
+                                <input type="text" {...register('email', { required: 'Email is required', pattern: { value: /^\S+@\S+$/i, message: "Invalid Email" } })} placeholder="Enter Your email Address" className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-5 py-4 bg-gray-200" />
+                                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+
                             </div>
                             <div className="flex flex-col">
                                 <label htmlFor="">Password</label>
-                                <input type="text" placeholder="Your Password" className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-5 py-4 bg-gray-200" />
+                                <input type="password" placeholder="Your Password" {...register('password', { required: 'Password is required' })} className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-5 py-4 bg-gray-200" />
+                                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
                             </div>
 
 
-                            <div className="mt-4">
-                                <input type="checkbox" id="accept" className="hidden" onClick={() => setChecked(prev => !prev)} />
-                                <label htmlFor="accept" className="flex items-center gap-2">
-                                    <div className={`w-8 h-8 flex justify-center items-center border rounded-sm ${checked ? "bg-(--primary-color)" : ""}`}>
-                                        {checked && <Check className="text-(--white-color)" />}
-                                    </div>
-                                    I accept all
-                                    <span className="text-(--primary-color)"> terms and condition</span>
-                                </label>
-                            </div>
-                            <button type={'submit'} className={`primary text-center mt-8 w-75 mx-auto justify-center rounded-lg border-2 border-(--primary-color) px-6 py-4 cursor-pointer gap-2 items-center flex`}>
+                            <button type={'submit'} disabled={isSubmitting} className={`primary text-center md:mt-8 w-75 mx-auto justify-center rounded-lg border-2 border-(--primary-color) px-6 py-4 cursor-pointer gap-2 items-center flex disabled:bg-gray-500!`}>
                                 Login
+                                {isSubmitting && <Loader2 className="animate-spin" />}
                             </button>
 
                             <p className="flex justify-center mt-20">Don't have an account ? <button type="button" className="text-(--primary-color) cursor-pointer hover:underline" onClick={() => {

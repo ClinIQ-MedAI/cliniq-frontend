@@ -17,7 +17,8 @@ function App() {
             setOpenLoginForm={setOpenLoginForm}
             setOpenSignUpForm={setOpenSignUpForm}
             openSignUpForm={openSignUpForm}
-          />} />
+          />}
+          />
         </Route>
       </Routes>
     </Router>

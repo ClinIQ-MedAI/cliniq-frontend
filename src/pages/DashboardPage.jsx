@@ -15,6 +15,14 @@ import { Button } from "../components/Button"
 import { useNavigate } from "react-router-dom"
 import { AnimatePresence } from "framer-motion"
 import { LoginForm } from "../components/LoginForm"
+import { FeedbackCard } from "../components/Feedback"
+import patient1 from '/patient1.jpg'
+import patient2 from '/Patient2.jpg'
+import patient3 from '/Patient3.jpg'
+import { ChevronLeft } from "lucide-react"
+import { ChevronRight } from "lucide-react"
+import { motion } from 'framer-motion'
+import { useState } from "react"
 const DoctorArray = [
     {
         imageUrl: Doctor1,
@@ -46,9 +54,67 @@ const DoctorArray = [
     },
 ]
 
+const Feedbacks = [
+    {
+        imageUrl: patient2,
+        rating: 4,
+        name: 'Sara Ali Khan',
+        specialityPatient: "Cardiologist Patient",
+        feedback: "Thanks for all the services, no doubt it is the best hospital."
+    },
+    {
+        imageUrl: patient1,
+        rating: 4.5,
+        name: 'Simon Targett',
+        specialityPatient: "Neurologist Patient",
+        feedback: "Thanks for all the services, no doubt it is the best hospital."
+    },
+    {
+        imageUrl: patient3,
+        rating: 5,
+        name: 'Sara Ali Khan',
+        specialityPatient: "Cardiologist Patient",
+        feedback: "Thanks for all the services, no doubt it is the best hospital."
+    },
+    {
+        imageUrl: patient1,
+        rating: 5,
+        name: 'there we go',
+        specialityPatient: "we",
+        feedback: "Thanks for all the services, no doubt it is the best hospital."
+    },
+    {
+        imageUrl: patient1,
+        rating: 5,
+        name: 'there we go',
+        specialityPatient: "we",
+        feedback: "Thanks for all the services, no doubt it is the best hospital."
+    },
+    {
+        imageUrl: patient1,
+        rating: 5,
+        name: 'there we go',
+        specialityPatient: "we",
+        feedback: "Thanks for all the services, no doubt it is the best hospital."
+    },
+]
+
 export const DashboardPage = ({ openSignUpForm, setOpenSignUpForm, openLoginForm, setOpenLoginForm }) => {
     const navigate = useNavigate()
+    // 1. Add this logic inside your component function
+    const [index, setIndex] = useState(0);
+    const itemsToShow = 3;
+    const handleNext = () => {
+        // Cycles to the start if at the end
+        setIndex((prev) =>
+            prev >= Feedbacks.length - itemsToShow ? 0 : prev + 1
+        );
+    };
 
+    const handlePrev = () => {
+        // Cycles to the end if at the start
+        setIndex((prev) => prev === 0 ? Feedbacks.length - itemsToShow : prev - 1);
+    };
     return <main className="container  px-(--padding-inline)">
         <AnimatePresence mode="wait">
             {openSignUpForm && (
@@ -86,6 +152,48 @@ export const DashboardPage = ({ openSignUpForm, setOpenSignUpForm, openLoginForm
                     <Button text={'See More'} primary={true} onClick={() => navigate('/doctors')} />
                 </div>
             </div>
+        </General>
+        <General head={"Patients Testimonial"} paragraph={"Let’s see what our happy patients says"}>
+            {/* Left Button */}
+            <motion.button
+                onClick={handlePrev}
+                initial={{ translateY: 0, scale: 1 }}
+                whileHover={{ translateY: "-5px", scale: 1.1 }}
+                className="size-10 flex justify-center z-10 items-center bg-(--primary-color) text-white rounded-full shadow-lg cursor-pointer  absolute -left-5 top-1/2 -translate-y-1/2"
+            >
+                <ChevronLeft />
+            </motion.button>
+
+            <div className="overflow-hidden relative w-full">
+                <motion.div
+                    className="flex relative"
+                    animate={{ x: `-${index * (100 / itemsToShow)}%` }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                >
+                    {Feedbacks.map((fe, index) => (
+                        <div key={fe.name + "-" + index} className="min-w-[33.333%] px-3 py-4">
+                            <div className="h-full shadow-[0_0_10px_5px_#00000022] px-8 py-6 rounded-xl border border-blue-200">
+                                <FeedbackCard
+                                    feedback={fe.feedback}
+                                    name={fe.name}
+                                    imageUrl={fe.imageUrl}
+                                    rating={fe.rating}
+                                    specialityPatient={fe.specialityPatient}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                </motion.div>
+            </div>
+            {/* Right Button */}
+            <motion.button
+                onClick={handleNext}
+                initial={{ translateY: 0, scale: 1 }}
+                whileHover={{ translateY: "-5px", scale: 1.1 }}
+                className="size-10 flex justify-center z-10 items-center bg-(--primary-color) text-white rounded-full shadow-lg cursor-pointer absolute -right-5 top-1/2 -translate-y-1/2"
+            >
+                <ChevronRight />
+            </motion.button>
         </General>
     </main >
 } 
