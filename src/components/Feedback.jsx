@@ -11,12 +11,12 @@ import { Star } from "lucide-react";
  * @returns 
  */
 export const FeedbackCard = (props) => {
-    return <div className="flex items-start gap-4">
-        <img src={props.imageUrl} className="size-20 rounded-full ml-[32.5px] shadow-[-12.2px_0_0_0_var(--primary-color)]" alt="" />
+    return <div className="flex flex-col justify-center xl:flex-row items-start gap-4">
+        <img src={props.imageUrl} className="size-20 mx-auto rounded-full xl:ml-[32.5px] shadow-[-12.2px_0_0_0_var(--primary-color)]" alt="" />
         <div className="space-y-2">
-            <h2 className="text-2xl">{props.name}</h2>
-            <p className="text-[#767676]">{props.specialityPatient}</p>
-            <div className="flex gap-3 mb-2">
+            <h2 className="text-2xl text-center xl:text-left">{props.name}</h2>
+            <p className="text-[#767676] text-center xl:text-left">{props.specialityPatient}</p>
+            <div className="flex gap-3 justify-center xl:justify-start mb-2">
                 {[1, 2, 3, 4, 5].map(star => {
                     const rating = props.rating || 0
                     let fillPercentage = (rating - (star - 1)) * 100

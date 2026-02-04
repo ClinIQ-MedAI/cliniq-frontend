@@ -23,6 +23,7 @@ import { ChevronLeft } from "lucide-react"
 import { ChevronRight } from "lucide-react"
 import { motion } from 'framer-motion'
 import { useState } from "react"
+import { useEffect } from "react"
 const DoctorArray = [
     {
         imageUrl: Doctor1,
@@ -103,7 +104,26 @@ export const DashboardPage = ({ openSignUpForm, setOpenSignUpForm, openLoginForm
     const navigate = useNavigate()
     // 1. Add this logic inside your component function
     const [index, setIndex] = useState(0);
-    const itemsToShow = 3;
+    const [itemsToShow, setItemsToShow] = useState(1);
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) {
+                setItemsToShow(3);
+            } else if (window.innerWidth >= 768) {
+                setItemsToShow(2);
+            } else {
+                setItemsToShow(1);
+            }
+        };
+
+        handleResize();
+
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [])
     const handleNext = () => {
         // Cycles to the start if at the end
         setIndex((prev) =>
@@ -171,7 +191,7 @@ export const DashboardPage = ({ openSignUpForm, setOpenSignUpForm, openLoginForm
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 >
                     {Feedbacks.map((fe, index) => (
-                        <div key={fe.name + "-" + index} className="min-w-[33.333%] px-3 py-4">
+                        <div key={fe.name + "-" + index} className="min-w-full md:min-w-[50%] lg:min-w-[33.333%] px-3 py-4">
                             <div className="h-full shadow-[0_0_10px_5px_#00000022] px-8 py-6 rounded-xl border border-blue-200">
                                 <FeedbackCard
                                     feedback={fe.feedback}
