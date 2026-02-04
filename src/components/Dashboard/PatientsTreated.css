@@ -1,0 +1,30 @@
+.patients-treated-container{
+  width:100%;
+}
+.patients-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.patients-header h2{margin:0;font-size:20px}
+.patients-header .subtitle{margin:4px 0 0;color:#64748b}
+.stats-summary{display:flex;gap:12px}
+.stat-item{background:#fff;padding:10px 14px;border-radius:8px;box-shadow:0 4px 12px rgba(16,24,40,0.04);text-align:center}
+.stat-number{display:block;font-weight:700;font-size:18px}
+.stat-label{display:block;color:#64748b;font-size:12px}
+.patients-controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.search-box{flex:1}
+.search-input{width:100%;padding:8px 10px;border:1px solid #e6edf3;border-radius:8px}
+.filters{display:flex;gap:8px;align-items:center;margin-left:16px}
+.status-filter{padding:8px;border-radius:8px;border:1px solid #e6edf3}
+.add-patient-btn{background:#2563eb;color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
+.patients-table-container{background:transparent}
+.patients-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 6px 18px rgba(16,24,40,0.04)}
+.patients-table thead th{padding:12px 10px;text-align:left;color:#64748b;font-size:13px;border-bottom:1px solid #eef2f6}
+.patients-table tbody td{padding:12px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.patient-info-cell{display:flex;gap:12px;align-items:center}
+.patient-avatar{width:40px;height:40px;border-radius:8px;background:#e2e8f0;color:#0f172a;display:flex;align-items:center;justify-content:center;font-weight:700}
+.patient-name{font-weight:600}
+.patient-details{color:#94a3b8;font-size:13px}
+.status-select{padding:6px;border-radius:6px;border:1px solid #e6edf3}
+.condition-badge{padding:6px 8px;border-radius:999px;background:#eef2ff;color:#2563eb;font-size:12px}
+.action-buttons{display:flex;gap:8px}
+.action-btn{padding:6px 10px;border-radius:6px;border:1px solid #e6edf3;background:#fff;cursor:pointer}
+.action-btn.delete-btn{border-color:#fecaca;color:#b91c1c}
+.no-results{padding:24px;background:#fff;border-radius:8px;text-align:center}

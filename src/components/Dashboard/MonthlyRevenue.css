@@ -1,0 +1,54 @@
+.monthly-revenue{background:#fff;padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(16,24,40,0.04)}
+.monthly-revenue.loading{min-height:140px}
+.revenue-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.header-left h3{margin:0}
+.revenue-summary{display:flex;flex-direction:column}
+.revenue-amount{font-weight:800;font-size:20px}
+.revenue-change{font-size:13px;color:#64748b;margin-top:6px}
+.header-right{display:flex;gap:8px;align-items:center}
+.period-select{padding:6px 8px;border-radius:6px;border:1px solid #e6eef7}
+.export-btn{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:8px;border:1px solid #e6eef7;background:#ffffff}
+.period-select{padding:8px 10px;border-radius:8px;border:1px solid #e6edf3;background:#fff}
+.export-btn{padding:8px 10px;border-radius:8px;border:1px solid #e6edf3;background:#fff;margin-left:8px}
+.chart-tabs{display:flex;gap:8px;margin:12px 0}
+.chart-tab{padding:8px 12px;border-radius:8px;border:1px solid transparent;background:transparent}
+.chart-tab.active{background:#eef2ff;border-color:#dbeafe}
+.revenue-chart-container{display:flex;gap:12px}
+.chart-y-axis{display:flex;flex-direction:column;gap:10px;color:#94a3b8;width:80px}
+.chart-bars{display:flex;gap:8px;align-items:end;flex:1}
+.chart-bar-container{display:flex;flex-direction:column;align-items:center;gap:6px}
+.chart-bar{width:28px;border-radius:6px;display:flex;align-items:flex-end;justify-content:center;position:relative}
+.chart-bar.current{box-shadow:0 4px 12px rgba(59,130,246,0.15)}
+.bar-value{position:absolute;bottom:-22px;font-size:11px;color:#64748b}
+.bar-label{font-size:12px;color:#64748b}
+.revenue-breakdown{margin-top:12px}
+.breakdown-bars{display:flex;flex-direction:column;gap:10px}
+.breakdown-item{display:flex;flex-direction:column;gap:6px}
+.breakdown-info{display:flex;gap:12px;align-items:center}
+.breakdown-category{font-weight:600}
+.breakdown-amount{color:#0f172a}
+.breakdown-percentage{color:#64748b}
+.breakdown-bar{background:#f1f5f9;height:10px;border-radius:6px;overflow:hidden}
+.breakdown-fill{height:100%}
+.comparison-stats{display:flex;gap:12px;margin-top:12px}
+.comparison-item{background:#f8fafc;padding:8px;border-radius:8px}
+.revenue-forecast{margin-top:12px;background:#fff;padding:10px;border-radius:8px}
+
+/* Compact card styles */
+.monthly-revenue.compact{display:flex;align-items:center;gap:16px;padding:14px;border-radius:12px}
+.compact-left{min-width:220px}
+.compact-title{font-weight:700;color:#0f172a}
+.compact-amount{font-size:20px;font-weight:800;margin-top:6px}
+.compact-change{font-size:13px;margin-top:6px}
+.compact-status{font-size:12px;color:#10b981;margin-top:6px}
+.compact-chart{flex:1;height:80px}
+.mini-line{width:100%;height:100%}
+.compact-actions{width:100px;display:flex;justify-content:flex-end}
+.compact-select{padding:6px 8px;border-radius:6px;border:1px solid #e6eef7}
+
+/* Dual line chart styles */
+.dual-line-chart{width:100%;height:120px}
+.dual-line-chart polyline{filter:drop-shadow(0 3px 6px rgba(14,30,50,0.06));}
+.highlight-circle{transition:transform .12s}
+.dual-line .bar-label{font-size:11px}
+
