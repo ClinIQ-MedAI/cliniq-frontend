@@ -1,0 +1,182 @@
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+  align-items: stretch;
+  min-height: 600px; 
+}
+
+.left-col,
+.right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%; /* ضيف دي */
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.04);
+  border: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* ضيف دي */
+}
+
+.left-col > .card,
+.right-col > .card {
+  flex: 1 1 auto; 
+  min-height: 0; 
+  overflow: hidden; 
+}
+
+.card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto; 
+} /* هنا كان في قوس ناقص */
+
+.card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* ضيف دي */
+  overflow-y: auto; /* ضيف دي */
+}
+
+.card li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.card li:last-child {
+  border-bottom: none;
+}
+
+.card table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  flex: 1; /* ضيف دي */
+  display: flex; /* ضيف دي */
+  flex-direction: column; /* ضيف دي */
+}
+
+.card thead {
+  display: table; /* ضيف دي */
+  width: 100%; /* ضيف دي */
+  table-layout: fixed; /* ضيف دي */
+}
+
+.card thead th {
+  padding: 12px 8px;
+  text-align: left;
+  color: #64748b;
+  font-weight: 600;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc; /* ضيف دي */
+}
+
+.card tbody {
+  flex: 1; /* ضيف دي */
+  display: block; /* ضيف دي */
+  overflow-y: auto; /* ضيف دي */
+}
+
+.card tbody tr {
+  display: table; /* ضيف دي */
+  width: 100%; /* ضيف دي */
+  table-layout: fixed; /* ضيف دي */
+}
+
+.card tbody td {
+  padding: 12px 8px;
+  border-bottom: 1px solid #f8fafc;
+}
+
+/* ضيف الكلاسات دي للأزرار */
+.approval-buttons {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.card button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.card button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.approve-btn.approved {
+  background: #10b981 !important;
+  color: white !important;
+  border-color: #10b981 !important;
+}
+
+.reject-btn.rejected {
+  background: #ef4444 !important;
+  color: white !important;
+  border-color: #ef4444 !important;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    min-height: auto; 
+  }
+  
+  .left-col,
+  .right-col {
+    gap: 12px;
+  }
+  
+  .card {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    gap: 10px;
+    margin-top: 12px;
+  }
+  
+  .left-col,
+  .right-col {
+    gap: 10px;
+  }
+  
+  .card {
+    padding: 12px;
+  }
+  
+  .card li {
+    padding: 10px 0;
+  }
+  
+  .card thead th,
+  .card tbody td {
+    padding: 10px 6px;
+    font-size: 13px;
+  }
+}
