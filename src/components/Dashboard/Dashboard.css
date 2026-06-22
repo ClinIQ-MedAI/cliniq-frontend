@@ -1,182 +1,359 @@
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 16px;
-  margin-top: 16px;
-  align-items: stretch;
-  min-height: 600px; 
+/* ── Reset scope ──────────────────────────────────────────── */
+.db-root {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 32px;
 }
 
-.left-col,
-.right-col {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  height: 100%; /* ضيف دي */
-}
-
-.card {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.04);
-  border: 1px solid #f1f5f9;
-  display: flex;
-  flex-direction: column;
-  height: 100%; /* ضيف دي */
-}
-
-.left-col > .card,
-.right-col > .card {
-  flex: 1 1 auto; 
-  min-height: 0; 
-  overflow: hidden; 
-}
-
-.card-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: auto; 
-} /* هنا كان في قوس ناقص */
-
-.card ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0; /* ضيف دي */
-  overflow-y: auto; /* ضيف دي */
-}
-
-.card li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.card li:last-child {
-  border-bottom: none;
-}
-
-.card table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  flex: 1; /* ضيف دي */
-  display: flex; /* ضيف دي */
-  flex-direction: column; /* ضيف دي */
-}
-
-.card thead {
-  display: table; /* ضيف دي */
-  width: 100%; /* ضيف دي */
-  table-layout: fixed; /* ضيف دي */
-}
-
-.card thead th {
-  padding: 12px 8px;
-  text-align: left;
-  color: #64748b;
-  font-weight: 600;
-  border-bottom: 1px solid #f1f5f9;
-  background: #f8fafc; /* ضيف دي */
-}
-
-.card tbody {
-  flex: 1; /* ضيف دي */
-  display: block; /* ضيف دي */
-  overflow-y: auto; /* ضيف دي */
-}
-
-.card tbody tr {
-  display: table; /* ضيف دي */
-  width: 100%; /* ضيف دي */
-  table-layout: fixed; /* ضيف دي */
-}
-
-.card tbody td {
-  padding: 12px 8px;
-  border-bottom: 1px solid #f8fafc;
-}
-
-/* ضيف الكلاسات دي للأزرار */
-.approval-buttons {
-  display: inline-flex;
-  gap: 8px;
-}
-
-.card button {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.card button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.approve-btn.approved {
-  background: #10b981 !important;
-  color: white !important;
-  border-color: #10b981 !important;
-}
-
-.reject-btn.rejected {
-  background: #ef4444 !important;
-  color: white !important;
-  border-color: #ef4444 !important;
-}
-
-@media (max-width: 1024px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
+/* ── Welcome ──────────────────────────────────────────────── */
+.db-welcome {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
     gap: 12px;
-    min-height: auto; 
-  }
-  
-  .left-col,
-  .right-col {
-    gap: 12px;
-  }
-  
-  .card {
-    padding: 14px;
-  }
 }
-
-@media (max-width: 768px) {
-  .dashboard-grid {
-    gap: 10px;
-    margin-top: 12px;
-  }
-  
-  .left-col,
-  .right-col {
-    gap: 10px;
-  }
-  
-  .card {
-    padding: 12px;
-  }
-  
-  .card li {
-    padding: 10px 0;
-  }
-  
-  .card thead th,
-  .card tbody td {
-    padding: 10px 6px;
+.db-welcome-name {
+    font-size: 20px;
+    font-weight: 500;
+    color: #0f172a;
+    margin: 0;
+}
+.db-welcome-sub {
     font-size: 13px;
-  }
+    color: #64748b;
+    margin-top: 4px;
+}
+.db-clock {
+    text-align: right;
+}
+.db-clock-time {
+    font-size: 20px;
+    font-weight: 500;
+    color: #0f172a;
+}
+.db-clock-date {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 3px;
+}
+
+/* ── Metric cards ─────────────────────────────────────────── */
+.db-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+.db-mc {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 14px 16px;
+}
+.db-mc-label {
+    font-size: 12px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+.db-mc-label [class^="ti"] {
+    font-size: 14px;
+}
+.db-mc-num {
+    font-size: 22px;
+    font-weight: 600;
+    color: #0f172a;
+}
+.db-mc-sub {
+    font-size: 11px;
+    margin-top: 4px;
+    color: #94a3b8;
+}
+.db-mc-sub.up {
+    color: #0f6e56;
+}
+.db-mc-sub.dn {
+    color: #993c1d;
+}
+
+/* ── Main grid ────────────────────────────────────────────── */
+.db-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 16px;
+    align-items: start;
+}
+.db-left {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.db-right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ── Card ─────────────────────────────────────────────────── */
+.db-card {
+    background: #fff;
+    border: 0.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px 20px;
+}
+.db-card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 14px;
+}
+
+/* ── Table ────────────────────────────────────────────────── */
+.db-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.db-table thead th {
+    font-size: 11px;
+    font-weight: 500;
+    color: #94a3b8;
+    text-align: left;
+    padding: 0 10px 8px;
+    border-bottom: 0.5px solid #f1f5f9;
+}
+.db-table tbody tr {
+    border-bottom: 0.5px solid #f1f5f9;
+}
+.db-table tbody tr:last-child {
+    border-bottom: none;
+}
+.db-table tbody td {
+    padding: 10px 10px;
+    color: #0f172a;
+    vertical-align: middle;
+}
+.db-muted {
+    color: #64748b !important;
+}
+
+.db-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.db-av {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 500;
+    flex-shrink: 0;
+    background: #eeedfe;
+    color: #3c3489;
+}
+
+/* ── Pills ────────────────────────────────────────────────── */
+.db-pill {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: 999px;
+}
+.db-pill-pending {
+    background: #faeeda;
+    color: #854f0b;
+}
+.db-pill-approved {
+    background: #e1f5ee;
+    color: #085041;
+}
+.db-pill-rejected {
+    background: #faece7;
+    color: #712b13;
+}
+
+/* ── Action buttons ───────────────────────────────────────── */
+.db-action-btns {
+    display: inline-flex;
+    gap: 6px;
+}
+.db-abt {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 0.5px solid #e2e8f0;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    transition:
+        background 0.15s,
+        border-color 0.15s;
+}
+.db-abt:hover {
+    background: #f8fafc;
+}
+.db-abt-ok {
+    background: #e1f5ee !important;
+    border-color: #5dcaa5 !important;
+    color: #085041;
+}
+.db-abt-rej {
+    background: #faece7 !important;
+    border-color: #f0997b !important;
+    color: #712b13;
+}
+
+/* ── Revenue chart ────────────────────────────────────────── */
+.db-chart-block {
+    display: flex;
+    flex-direction: column;
+}
+.db-legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+.db-leg-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #94a3b8;
+}
+.db-leg-sq {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+.db-chart-wrap {
+    position: relative;
+    width: 100%;
+    height: 160px;
+}
+
+/* ── Clients ──────────────────────────────────────────────── */
+.db-client-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 0.5px solid #f1f5f9;
+}
+.db-client-row:last-child {
+    border-bottom: none;
+}
+.db-cl-av {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 500;
+}
+.db-cl-a {
+    background: #e6f1fb;
+    color: #0c447c;
+}
+.db-cl-b {
+    background: #eeedfe;
+    color: #3c3489;
+}
+.db-cl-c {
+    background: #e1f5ee;
+    color: #085041;
+}
+.db-cl-info {
+    flex: 1;
+    min-width: 0;
+}
+.db-cl-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: #0f172a;
+}
+.db-cl-cond {
+    font-size: 11px;
+    color: #94a3b8;
+}
+.db-cl-visits {
+    font-size: 12px;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+/* ── Announcements ────────────────────────────────────────── */
+.db-ann-row {
+    display: flex;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 0.5px solid #f1f5f9;
+    align-items: flex-start;
+}
+.db-ann-row:last-child {
+    border-bottom: none;
+}
+.db-ann-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+}
+.db-ann-dot-hi {
+    background: #d85a30;
+}
+.db-ann-dot-md {
+    background: #ef9f27;
+}
+.db-ann-dot-lo {
+    background: #1d9e75;
+}
+.db-ann-text {
+    font-size: 12px;
+    color: #0f172a;
+    line-height: 1.5;
+}
+.db-ann-date {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .db-metrics {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .db-grid {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 600px) {
+    .db-metrics {
+        grid-template-columns: 1fr;
+    }
+    .db-welcome {
+        flex-direction: column;
+    }
+    .db-clock {
+        text-align: left;
+    }
 }
