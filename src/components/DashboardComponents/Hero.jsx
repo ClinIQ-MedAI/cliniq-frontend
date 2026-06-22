@@ -1,7 +1,7 @@
 import { ArrowRight } from "lucide-react"
 import { Button } from "../Button"
 import { Play } from "lucide-react"
-import Banner from '/Banner.png'
+import Banner from '/doctor.png'
 import { FloatingComponent } from "../FloatingComponent"
 import { SearchIcon } from "lucide-react"
 import { ClipboardListIcon } from "lucide-react"
@@ -62,14 +62,14 @@ export const Hero = () => {
 
                     <div className="absolute inset-0 bg-(--primary-color)"></div>
 
-                    <img src={Banner} style={{ clipPath: "inset(50% 0 0 0)" }} className="h-150 absolute -bottom-7 -right-5 object-cover " alt="" />
+                    <img src={Banner} style={{ clipPath: "inset(50% 0 0 0)" }} className="h-140 absolute -bottom-7 right-5 object-cover " alt="" />
 
                     <div className="absolute w-full h-full bg-linear-to-t from-(--primary-color) via-transparent to-transparent z-20"></div>
                 </div>
                 <div className="absolute inset-0 z-20 pointer-events-none">
                     <img
                         src={Banner}
-                        className="h-150 absolute -bottom-3 -right-5 object-cover"
+                        className="h-140 absolute -bottom-3 right-5 object-cover"
                         alt="Doctors"
                         style={{ clipPath: "inset(0 0 50% 0)" }}
                     />
