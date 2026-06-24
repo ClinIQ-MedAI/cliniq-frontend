@@ -2,6 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "../../contexts/UserContext";
 import { patientsData } from "../../Services/mockData";
 import "./Dashboard.css";
+import { Users } from "lucide-react";
+import { Calendar } from "lucide-react";
+import { ChartLine } from "lucide-react";
+import { Star } from "lucide-react";
 
 /* ─── helpers ──────────────────────────────────────────────── */
 const ini = (name = "") =>
@@ -28,10 +32,11 @@ const getGreeting = () => {
 };
 
 /* ─── metric card ───────────────────────────────────────────── */
-const MetricCard = ({ icon, label, value, sub, subUp }) => (
+const MetricCard = ({ Icon, label, value, sub, subUp }) => (
     <div className="db-mc">
         <div className="db-mc-label">
-            <span className={`ti ${icon}`} aria-hidden="true" />
+            {/* <span className={`ti ${icon}`} aria-hidden="true" /> */}
+            <Icon />
             {label}
         </div>
         <div className="db-mc-num">{value}</div>
@@ -103,58 +108,60 @@ const AppointmentsTable = () => {
         );
 
     return (
-        <table className="db-table">
-            <thead>
-                <tr>
-                    <th>Patient</th>
-                    <th>Condition</th>
-                    <th>Date</th>
-                    <th style={{ textAlign: "center" }}>Status</th>
-                    <th style={{ textAlign: "center" }}>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {rows.map((r) => (
-                    <tr key={r.id}>
-                        <td>
-                            <div className="db-name-cell">
-                                <div className="db-av">{ini(r.name)}</div>
-                                <span>{r.name}</span>
-                            </div>
-                        </td>
-                        <td className="db-muted">{r.disease}</td>
-                        <td className="db-muted">{r.date}</td>
-                        <td style={{ textAlign: "center" }}>
-                            <StatusPill status={r.status} />
-                        </td>
-                        <td style={{ textAlign: "center" }}>
-                            <div className="db-action-btns">
-                                <button
-                                    className={`db-abt ${r.status === "approved" ? "db-abt-ok" : ""}`}
-                                    onClick={() => toggle(r.id, "approved")}
-                                    aria-label={`Approve ${r.name}`}
-                                >
-                                    <span
-                                        className="ti ti-check"
-                                        aria-hidden="true"
-                                    />
-                                </button>
-                                <button
-                                    className={`db-abt ${r.status === "rejected" ? "db-abt-rej" : ""}`}
-                                    onClick={() => toggle(r.id, "rejected")}
-                                    aria-label={`Reject ${r.name}`}
-                                >
-                                    <span
-                                        className="ti ti-x"
-                                        aria-hidden="true"
-                                    />
-                                </button>
-                            </div>
-                        </td>
+        <div className="overflow-x-auto w-full max-w-[100%]">
+            <table className="db-table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Condition</th>
+                        <th>Date</th>
+                        <th style={{ textAlign: "center" }}>Status</th>
+                        <th style={{ textAlign: "center" }}>Action</th>
                     </tr>
-                ))}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {rows.map((r) => (
+                        <tr key={r.id}>
+                            <td>
+                                <div className="db-name-cell">
+                                    <div className="db-av">{ini(r.name)}</div>
+                                    <span>{r.name}</span>
+                                </div>
+                            </td>
+                            <td className="db-muted">{r.disease}</td>
+                            <td className="db-muted">{r.date}</td>
+                            <td style={{ textAlign: "center" }}>
+                                <StatusPill status={r.status} />
+                            </td>
+                            <td style={{ textAlign: "center" }}>
+                                <div className="db-action-btns">
+                                    <button
+                                        className={`db-abt ${r.status === "approved" ? "db-abt-ok" : ""}`}
+                                        onClick={() => toggle(r.id, "approved")}
+                                        aria-label={`Approve ${r.name}`}
+                                    >
+                                        <span
+                                            className="ti ti-check"
+                                            aria-hidden="true"
+                                        />
+                                    </button>
+                                    <button
+                                        className={`db-abt ${r.status === "rejected" ? "db-abt-rej" : ""}`}
+                                        onClick={() => toggle(r.id, "rejected")}
+                                        aria-label={`Reject ${r.name}`}
+                                    >
+                                        <span
+                                            className="ti ti-x"
+                                            aria-hidden="true"
+                                        />
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
     );
 };
 
@@ -324,28 +331,28 @@ export default function Dashboard() {
             {/* metric cards */}
             <div className="db-metrics">
                 <MetricCard
-                    icon="ti-users"
+                    Icon={Users}
                     label="Patients treated"
                     value="3,247"
                     sub="↑ 12% vs last month"
                     subUp={true}
                 />
                 <MetricCard
-                    icon="ti-calendar"
+                    Icon={Calendar}
                     label="Today's appointments"
                     value="18"
                     sub="↑ 3 more than yesterday"
                     subUp={true}
                 />
                 <MetricCard
-                    icon="ti-chart-line"
+                    Icon={ChartLine}
                     label="Monthly revenue"
                     value="$24,580"
                     sub="↑ 15% vs last month"
                     subUp={true}
                 />
                 <MetricCard
-                    icon="ti-star"
+                    Icon={Star}
                     label="Average rating"
                     value="4.8"
                     sub="Based on 324 reviews"

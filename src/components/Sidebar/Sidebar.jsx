@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/UserContext";
 import "./Sidebar.css";
+import { X } from "lucide-react";
 
 const NAV_MAIN = [
     {
@@ -37,10 +38,9 @@ function NavItem({ to, icon, label, badge }) {
     );
 }
 
-function Sidebar() {
+function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
     const { user } = useUser();
     const navigate = useNavigate();
-
     const initials = (name = "") =>
         name
             .split(" ")
@@ -51,7 +51,10 @@ function Sidebar() {
             .slice(0, 2);
 
     return (
-        <aside className="sb" aria-label="Main navigation">
+        <aside
+            className={`sb fixed z-10 ${isSidebarOpen ? "translate-x-0" : "-translate-x-[100%]"} transition-all  md:translate-x-0 md:sticky left-0 top-0 `}
+            aria-label="Main navigation "
+        >
             {/* Logo */}
             <div className="sb-logo">
                 <div className="sb-logo-mark">
@@ -63,6 +66,12 @@ function Sidebar() {
                 <div>
                     <div className="sb-logo-name">Cliniq</div>
                     <div className="sb-logo-sub">Doctor portal</div>
+                </div>
+                <div
+                    className="text-red-500 ml-auto cursor-pointer hover:scale-120 active:scale-90 transition-all hover:bg-gray-300 rounded-md md:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                >
+                    <X />
                 </div>
             </div>
 

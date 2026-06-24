@@ -61,7 +61,7 @@
 }
 
 /* ── Nav items ──────────────────────────────────────────────── */
-nav {
+.sb nav {
     display: flex;
     flex-direction: column;
     gap: 2px;

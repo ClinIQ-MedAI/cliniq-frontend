@@ -84,8 +84,8 @@ export default function Profile({ onUpdateDoctorInfo }) {
     }
 
     return (
-        <div className="profile-container">
-            <div className="profile-card">
+        <div className="profile-container p-2">
+            <div className="profile-card text-center">
                 <div style={{ padding: "24px 0" }}>
                     <h2
                         style={{
