@@ -9,7 +9,7 @@ import { SignUpForm } from "../components/SignUpForm"
 import { DoctorCard } from "../components/DoctorComponents/DoctorCard"
 import Doctor1 from '/Doctor1.png'
 import Doctor2 from '/Doctor2.png'
-import Doctor3 from '/Doctor3.png'
+import Doctor3 from '/doctor3.png'
 import Doctor4 from '/Doctor4.png'
 import { Button } from "../components/Button"
 import { useNavigate } from "react-router-dom"
@@ -17,8 +17,8 @@ import { AnimatePresence } from "framer-motion"
 import { LoginForm } from "../components/LoginForm"
 import { FeedbackCard } from "../components/Feedback"
 import patient1 from '/patient1.jpg'
-import patient2 from '/Patient2.jpg'
-import patient3 from '/Patient3.jpg'
+import patient2 from '/patient2.png'
+import patient3 from '/patient3.png'
 import { ChevronLeft } from "lucide-react"
 import { ChevronRight } from "lucide-react"
 import { motion } from 'framer-motion'

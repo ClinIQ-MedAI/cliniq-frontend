@@ -9,9 +9,13 @@ import api from "../apis/api"
 import API_ENDPOINTS from "../apis/endpoints"
 import toast from "react-hot-toast"
 import { Loader2 } from "lucide-react"
+import { useContext } from "react"
+import UserContext from "../contexts/UserContext"
+import { useNavigate } from "react-router-dom"
 export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
     const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm()
-
+    const {user,setUser} = useContext(UserContext)
+    const navigate = useNavigate()
     async function handleLoginSubmit(data) {
         data
 
@@ -35,7 +39,15 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
             // const response = await api.post(API_ENDPOINTS.signup, combinedData, {
             //     headers: { "Content-Type": 'application/json' }
             // })
+            setUser(prev=>({
+               ...prev, 
+                email:data.email,
+                role: data.role || "DOCTOR"
+            }))
 
+            if(true){
+                navigate('/doctor-dashboard')
+            }
             toast.success('user logged in successfully')
             setOpenLoginForm(false)
             // TODO: store token in localstorage or something else
