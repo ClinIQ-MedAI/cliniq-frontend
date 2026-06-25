@@ -318,6 +318,7 @@ export default function Dashboard() {
     return (
         <div className="db-root">
             {/* welcome */}
+            <title>Dashboard - ClinIQ</title>
             <div className="db-welcome">
                 <div>
                     <h1 className="db-welcome-name">

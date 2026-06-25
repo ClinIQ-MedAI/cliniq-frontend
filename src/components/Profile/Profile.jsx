@@ -90,6 +90,8 @@ export default function Profile({ onUpdateDoctorInfo }) {
 
     return (
         <div className="w-full bg-page p-6">
+            <title>Profile - ClinIQ</title>
+
             <div className="max-w-5xl mx-auto">
                 {/* Page header */}
                 <div className="flex items-center justify-between mb-6">

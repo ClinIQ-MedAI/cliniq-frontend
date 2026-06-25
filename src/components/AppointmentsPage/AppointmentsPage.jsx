@@ -206,6 +206,7 @@ export default function AppointmentsPage() {
 
     return (
         <div className="flex flex-col gap-5 pb-8 px-5 pt-3">
+            <title>Appointment - ClinIQ</title>
             <div>
                 <h1 className="text-xl font-medium text-t1">
                     Appointment requests
