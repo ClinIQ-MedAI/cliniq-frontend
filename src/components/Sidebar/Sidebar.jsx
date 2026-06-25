@@ -2,7 +2,9 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/UserContext";
 import "./Sidebar.css";
 import { X } from "lucide-react";
-
+import { LogOut } from "lucide-react";
+import { Activity } from "lucide-react";
+import logo from "/cliniq_logo_transparent.png";
 const NAV_MAIN = [
     {
         to: "/doctor-dashboard",
@@ -57,10 +59,13 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
         >
             {/* Logo */}
             <div className="sb-logo">
-                <div className="sb-logo-mark">
-                    <i
-                        className="ti ti-heart-rate-monitor"
-                        aria-hidden="true"
+                <div className="sb-logo-mark ">
+                    {/* <Activity className="text-white" size={16} /> */}
+                    <img
+                        src={logo}
+                        alt=""
+                        className=""
+                        style={{ objectFit: "cover" }}
                     />
                 </div>
                 <div>
@@ -106,7 +111,7 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
                         aria-label="Sign out"
                         onClick={() => navigate("/")}
                     >
-                        <i className="ti ti-logout" aria-hidden="true" />
+                        <LogOut />
                     </button>
                 </div>
             </div>

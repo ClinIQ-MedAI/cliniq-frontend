@@ -114,7 +114,7 @@ const METRIC_COLORS = {
 
 function MetricCard({ value, label, color }) {
     return (
-        <div className="bg-slate-50 rounded-lg px-4 py-3">
+        <div className="bg-subtle rounded-lg px-4 py-3">
             <div className={`text-2xl font-medium ${METRIC_COLORS[color]}`}>
                 {value}
             </div>
@@ -148,7 +148,7 @@ function ActionBtn({ active, activeClass, onClick, label, children }) {
         ${
             active
                 ? activeClass
-                : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                : "border-border bg-card text-t3 hover:bg-subtle hover:text-t2"
         }`}
         >
             {children}
@@ -205,12 +205,12 @@ export default function AppointmentsPage() {
     };
 
     return (
-        <div className="flex flex-col gap-5 pb-8">
+        <div className="flex flex-col gap-5 pb-8 px-5 pt-3">
             <div>
-                <h1 className="text-xl font-medium text-slate-900">
+                <h1 className="text-xl font-medium text-t1">
                     Appointment requests
                 </h1>
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-t2 mt-1">
                     Manage and review all appointment requests
                 </p>
             </div>
@@ -242,9 +242,7 @@ export default function AppointmentsPage() {
                         placeholder="Search by name or condition…"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg bg-white
-                       text-slate-900 placeholder:text-slate-400 focus:outline-none
-                       focus:border-[#185FA5] transition-colors"
+                        className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-card text-t1 placeholder:text-t3 focus:outline-none focus:border-[#185FA5] transition-colors"
                     />
                 </div>
                 <div className="flex gap-1.5 flex-wrap">
@@ -256,7 +254,7 @@ export default function AppointmentsPage() {
                 ${
                     filter === f
                         ? "bg-[#EEF3FB] border-[#185FA5] text-[#185FA5] font-medium"
-                        : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                        : "bg-card border-border text-t2 hover:bg-subtle hover:text-t1"
                 }`}
                         >
                             {cap(f)}
@@ -265,9 +263,9 @@ export default function AppointmentsPage() {
                 </div>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
                 {slice.length === 0 ? (
-                    <div className="flex flex-col items-center gap-2 py-10 text-slate-400 text-sm">
+                    <div className="flex flex-col items-center gap-2 py-10 text-t2 text-sm">
                         <Frown className="w-7 h-7" />
                         <p>No appointments match your search.</p>
                         <button
@@ -292,7 +290,7 @@ export default function AppointmentsPage() {
                             <col className="w-[19%]" />
                         </colgroup>
                         <thead>
-                            <tr className="bg-slate-50 border-b border-slate-100">
+                            <tr className="bg-subtle border-b border-border-sub">
                                 {[
                                     "Patient",
                                     "Condition",
@@ -303,7 +301,7 @@ export default function AppointmentsPage() {
                                 ].map((h, i) => (
                                     <th
                                         key={h}
-                                        className={`text-[11px] font-medium text-slate-400 px-3.5 py-2.5 text-left
+                                        className={`text-[11px] font-medium text-t3 px-3.5 py-2.5 text-left
                                 ${i === 5 ? "text-center" : ""}`}
                                     >
                                         {h}
@@ -315,7 +313,7 @@ export default function AppointmentsPage() {
                             {slice.map((a) => (
                                 <tr
                                     key={a.id}
-                                    className="border-b border-slate-100 last:border-none hover:bg-slate-50 transition-colors"
+                                    className="border-b border-border-sub last:border-none hover:bg-subtle transition-colors"
                                 >
                                     <td className="px-3.5 py-2.5">
                                         <div className="flex items-center gap-2">
@@ -325,19 +323,19 @@ export default function AppointmentsPage() {
                                             >
                                                 {ini(a.name)}
                                             </div>
-                                            <span className="text-slate-800">
+                                            <span className="text-t1">
                                                 {a.name}
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="px-3.5 py-2.5 text-slate-500">
+                                    <td className="px-3.5 py-2.5 text-t2">
                                         {a.disease}
                                     </td>
-                                    <td className="px-3.5 py-2.5 text-slate-500">
+                                    <td className="px-3.5 py-2.5 text-t2">
                                         {a.date}
                                     </td>
                                     <td className="px-3.5 py-2.5">
-                                        <span className="text-[11px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+                                        <span className="text-[11px] bg-subtle text-t2 px-2 py-0.5 rounded-full">
                                             {a.visits}×
                                         </span>
                                     </td>
@@ -354,7 +352,15 @@ export default function AppointmentsPage() {
                                                 }
                                                 label={`Approve ${a.name}`}
                                             >
-                                                <Check className="w-3.5 h-3.5" />
+                                                <span
+                                                    style={{
+                                                        display: "flex",
+                                                        width: 14,
+                                                        height: 14,
+                                                    }}
+                                                >
+                                                    <Check size={14} />
+                                                </span>
                                             </ActionBtn>
                                             <ActionBtn
                                                 active={a.status === "rejected"}
@@ -364,7 +370,15 @@ export default function AppointmentsPage() {
                                                 }
                                                 label={`Reject ${a.name}`}
                                             >
-                                                <X className="w-3.5 h-3.5" />
+                                                <span
+                                                    style={{
+                                                        display: "flex",
+                                                        width: 14,
+                                                        height: 14,
+                                                    }}
+                                                >
+                                                    <X size={14} />
+                                                </span>
                                             </ActionBtn>
                                         </div>
                                     </td>
@@ -375,8 +389,8 @@ export default function AppointmentsPage() {
                 )}
 
                 {filtered.length > 0 && (
-                    <div className="flex items-center justify-between px-3.5 py-2.5 border-t border-slate-100 flex-wrap gap-2">
-                        <span className="text-xs text-slate-400">
+                    <div className="flex items-center justify-between px-3.5 py-2.5 border-t border-border-sub flex-wrap gap-2">
+                        <span className="text-xs text-t3">
                             Showing {start}–{end} of {filtered.length}
                         </span>
                         <div className="flex items-center gap-1">
@@ -386,11 +400,11 @@ export default function AppointmentsPage() {
                                 }
                                 disabled={safePage === 1}
                                 aria-label="Previous page"
-                                className="w-7 h-7 rounded-md border border-slate-200 bg-white flex items-center justify-center
-                           text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed
-                           transition-colors cursor-pointer"
+                                className="w-7 h-7 flex items-center justify-center rounded-md border border-border bg-card text-t2 hover:bg-subtle disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                             >
-                                <ChevronLeft className="w-4 h-4" />
+                                <span>
+                                    <ChevronLeft className="w-4 h-4" />
+                                </span>
                             </button>
                             {Array.from(
                                 { length: totalPages },
@@ -408,7 +422,7 @@ export default function AppointmentsPage() {
                               ${
                                   safePage === n
                                       ? "bg-[#185FA5] border-[#185FA5] text-white font-medium"
-                                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                                      : "border-border bg-card text-t2 hover:bg-subtle"
                               }`}
                                 >
                                     {n}
@@ -419,12 +433,15 @@ export default function AppointmentsPage() {
                                     setPage((p) => Math.min(p + 1, totalPages))
                                 }
                                 disabled={safePage === totalPages}
-                                aria-label="Next page"
-                                className="w-7 h-7 rounded-md border border-slate-200 bg-white flex items-center justify-center
-                           text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed
-                           transition-colors cursor-pointer"
+                                aria-label="Previous page"
+                                className="w-7 h-7 flex items-center justify-center rounded-md border border-border bg-card text-t2 hover:bg-subtle disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                             >
-                                <ChevronRight className="w-4 h-4" />
+                                <span>
+                                    <ChevronRight
+                                        className="w-4 h-4"
+                                        size={10}
+                                    />
+                                </span>
                             </button>
                         </div>
                     </div>

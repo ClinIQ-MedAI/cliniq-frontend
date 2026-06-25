@@ -2,10 +2,17 @@ import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "../../contexts/UserContext";
 import { patientsData } from "../../Services/mockData";
 import "./Dashboard.css";
-import { Users } from "lucide-react";
-import { Calendar } from "lucide-react";
-import { ChartLine } from "lucide-react";
-import { Star } from "lucide-react";
+import { Users, Calendar, TrendingUp, Star } from "lucide-react";
+import { Check } from "lucide-react";
+import { X } from "lucide-react";
+// import {
+//     Chart,
+//     BarController,
+//     BarElement,
+//     CategoryScale,
+//     LinearScale,
+//     Tooltip,
+// } from "chart.js";
 
 /* ─── helpers ──────────────────────────────────────────────── */
 const ini = (name = "") =>
@@ -141,9 +148,14 @@ const AppointmentsTable = () => {
                                         aria-label={`Approve ${r.name}`}
                                     >
                                         <span
-                                            className="ti ti-check"
-                                            aria-hidden="true"
-                                        />
+                                            style={{
+                                                display: "flex",
+                                                width: 14,
+                                                height: 14,
+                                            }}
+                                        >
+                                            <Check size={14} />
+                                        </span>
                                     </button>
                                     <button
                                         className={`db-abt ${r.status === "rejected" ? "db-abt-rej" : ""}`}
@@ -151,9 +163,14 @@ const AppointmentsTable = () => {
                                         aria-label={`Reject ${r.name}`}
                                     >
                                         <span
-                                            className="ti ti-x"
-                                            aria-hidden="true"
-                                        />
+                                            style={{
+                                                display: "flex",
+                                                width: 14,
+                                                height: 14,
+                                            }}
+                                        >
+                                            <X size={14} />
+                                        </span>
                                     </button>
                                 </div>
                             </td>
@@ -176,7 +193,6 @@ const RevenueChart = () => {
 
     useEffect(() => {
         if (!canvasRef.current || typeof window.Chart === "undefined") return;
-
         const isDark = window.matchMedia(
             "(prefers-color-scheme: dark)",
         ).matches;
@@ -345,7 +361,7 @@ export default function Dashboard() {
                     subUp={true}
                 />
                 <MetricCard
-                    Icon={ChartLine}
+                    Icon={TrendingUp}
                     label="Monthly revenue"
                     value="$24,580"
                     sub="↑ 15% vs last month"

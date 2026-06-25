@@ -3,7 +3,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    padding: 10px;
+    padding: 10px 20px;
     padding-bottom: 32px;
     width: 100%;
 }
@@ -19,12 +19,14 @@
 .db-welcome-name {
     font-size: 20px;
     font-weight: 500;
-    color: #0f172a;
+    color: var(--text-1);
+
     margin: 0;
 }
 .db-welcome-sub {
     font-size: 13px;
-    color: #64748b;
+    color: var(--text-2);
+
     margin-top: 4px;
 }
 .db-clock {
@@ -33,11 +35,11 @@
 .db-clock-time {
     font-size: 20px;
     font-weight: 500;
-    color: #0f172a;
+    color: var(--text-1);
 }
 .db-clock-date {
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--text-3);
     margin-top: 3px;
 }
 
@@ -48,13 +50,13 @@
     gap: 12px;
 }
 .db-mc {
-    background: #f8fafc;
+    background: var(--bg-subtle);
     border-radius: 8px;
     padding: 14px 16px;
 }
 .db-mc-label {
     font-size: 12px;
-    color: #64748b;
+    color: var(--text-2);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -66,7 +68,7 @@
 .db-mc-num {
     font-size: 22px;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--text-1);
 }
 .db-mc-sub {
     font-size: 11px;
@@ -101,15 +103,16 @@
 
 /* ── Card ─────────────────────────────────────────────────── */
 .db-card {
-    background: #fff;
-    border: 0.5px solid #e2e8f0;
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
     border-radius: 12px;
     padding: 18px 20px;
 }
 .db-card-title {
     font-size: 11px;
     font-weight: 600;
-    color: #94a3b8;
+    color: var(--text-3);
+
     text-transform: uppercase;
     letter-spacing: 0.06em;
     margin-bottom: 14px;
@@ -124,24 +127,24 @@
 .db-table thead th {
     font-size: 11px;
     font-weight: 500;
-    color: #94a3b8;
     text-align: left;
     padding: 0 10px 8px;
-    border-bottom: 0.5px solid #f1f5f9;
+    color: var(--text-3);
+    border-bottom: 0.5px solid var(--border-sub);
 }
 .db-table tbody tr {
-    border-bottom: 0.5px solid #f1f5f9;
+    border-bottom: 0.5px solid var(--border-sub);
 }
 .db-table tbody tr:last-child {
     border-bottom: none;
 }
 .db-table tbody td {
     padding: 10px 10px;
-    color: #0f172a;
+    color: var(--text-1);
     vertical-align: middle;
 }
 .db-muted {
-    color: #64748b !important;
+    color: var(--text-2) !important;
 }
 
 .db-name-cell {
@@ -197,8 +200,9 @@
     width: 26px;
     height: 26px;
     border-radius: 6px;
-    border: 0.5px solid #e2e8f0;
-    background: #fff;
+    border: 0.5px solid var(--border);
+    background: var(--bg-card);
+
     cursor: pointer;
     font-size: 13px;
     transition:
@@ -206,7 +210,7 @@
         border-color 0.15s;
 }
 .db-abt:hover {
-    background: #f8fafc;
+    background: var(--bg-subtle);
 }
 .db-abt-ok {
     background: #e1f5ee !important;
@@ -255,7 +259,7 @@
     align-items: center;
     gap: 10px;
     padding: 9px 0;
-    border-bottom: 0.5px solid #f1f5f9;
+    border-bottom: 0.5px solid var(--border-sub);
 }
 .db-client-row:last-child {
     border-bottom: none;
@@ -290,15 +294,15 @@
 .db-cl-name {
     font-size: 13px;
     font-weight: 500;
-    color: #0f172a;
+    color: var(--text-1);
 }
 .db-cl-cond {
     font-size: 11px;
-    color: #94a3b8;
+    color: var(--text-3);
 }
 .db-cl-visits {
     font-size: 12px;
-    color: #64748b;
+    color: var(--text-2);
     white-space: nowrap;
 }
 
@@ -307,7 +311,7 @@
     display: flex;
     gap: 10px;
     padding: 9px 0;
-    border-bottom: 0.5px solid #f1f5f9;
+    border-bottom: 0.5px solid var(--border-sub);
     align-items: flex-start;
 }
 .db-ann-row:last-child {
@@ -331,12 +335,12 @@
 }
 .db-ann-text {
     font-size: 12px;
-    color: #0f172a;
+    color: var(--text-1);
     line-height: 1.5;
 }
 .db-ann-date {
     font-size: 11px;
-    color: #94a3b8;
+    color: var(--text-3);
     margin-top: 2px;
 }
 

@@ -1,3 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+    --color-page: var(--bg-page);
+    --color-card: var(--bg-card);
+    --color-subtle: var(--bg-subtle);
+    --color-border: var(--border);
+    --color-border-sub: var(--border-sub);
+    --color-t1: var(--text-1);
+    --color-t2: var(--text-2);
+    --color-t3: var(--text-3);
+}
+
 @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 
 :root {
@@ -8,6 +21,24 @@
     --gray-color: #404040;
     --padding-inline: 50px;
     --default-color: #404040;
+    --bg-page: #f6f8fa;
+    --bg-card: #ffffff;
+    --bg-subtle: #f8fafc;
+    --border: #e2e8f0;
+    --border-sub: #f1f5f9;
+    --text-1: #0f172a;
+    --text-2: #64748b;
+    --text-3: #94a3b8;
+}
+[data-theme="dark"] {
+    --bg-page: #0f172a;
+    --bg-card: #1e293b;
+    --bg-subtle: #1a2744;
+    --border: #334155;
+    --border-sub: #1e293b;
+    --text-1: #f1f5f9;
+    --text-2: #94a3b8;
+    --text-3: #64748b;
 }
 
 * {
@@ -25,11 +56,8 @@ a:hover {
 }
 
 body {
-    margin: 0;
-    display: flex;
-    place-items: center;
-    min-width: 320px;
-    min-height: 100vh;
+    background: var(--bg-page);
+    color: var(--text-1);
 }
 
 h1 {
@@ -66,4 +94,3 @@ button:focus-visible {
         background-color: #f9f9f9;
     }
 } */
-@import "tailwindcss";
