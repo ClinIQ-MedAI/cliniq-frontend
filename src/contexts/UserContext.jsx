@@ -3,10 +3,18 @@ import React, { createContext, useContext, useState } from "react";
 const UserContext = createContext(null);
 
 export function UserProvider({ children }) {
-    const [user, setUser] = useState({ name: "Dr. Mohamed" });
+    const [user, setUser] = useState(
+        JSON.parse(localStorage.getItem("cliniq_user")) ?? null,
+    );
+
+    //TODO:Edit Login Logic when api finishes
+    function loginData(user) {
+        localStorage.setItem("cliniq_user", JSON.stringify(user));
+        setUser(user);
+    }
 
     return (
-        <UserContext.Provider value={{ user, setUser }}>
+        <UserContext.Provider value={{ user, loginData }}>
             {children}
         </UserContext.Provider>
     );
