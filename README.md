@@ -9,8 +9,11 @@ A modern clinic management frontend built with **React**, **Tailwind CSS v4**, a
 ## ✨ Features
 
 - 🏥 Doctor dashboard with appointments, revenue chart & patient stats
+- 👑 Admin dashboard for managing doctors and patients
+- 🔐 Role-based authentication (Admin / Doctor)
 - 📅 Appointment management (approve / reject / filter / paginate)
 - 👤 Doctor profile page with inline editing
+- 📝 Survey and Verification Status pages
 - 🌙 Light / Dark mode toggle
 - 📱 Fully responsive layout
 
@@ -18,6 +21,7 @@ A modern clinic management frontend built with **React**, **Tailwind CSS v4**, a
 
 ## 🖼️ Screenshots
 
+### Doctor Views
 | Light Mode                                  | Dark Mode                                 |
 | ------------------------------------------- | ----------------------------------------- |
 | ![Light](./images/dashboard_page_light.png) | ![Dark](./images/dashboard_page_dark.png) |
@@ -25,6 +29,15 @@ A modern clinic management frontend built with **React**, **Tailwind CSS v4**, a
 | Profile Page                                | Appointments Page                                    |
 | ------------------------------------------- | ---------------------------------------------------- |
 | ![Profile](./images/profile_page_light.png) | ![Appointments](./images/appointment_page_light.png) |
+
+### Admin & Additional Views
+| Admin Dashboard                               | Authentication (Login/Signup)                   |
+| --------------------------------------------- | ----------------------------------------------- |
+| ![Admin Dashboard](./images/admin_dashboard_page.png) | ![Authentication](./images/login.png) |
+
+| Survey Page                                 | Verification Status                             |
+| ------------------------------------------- | ----------------------------------------------- |
+| ![Survey Page](./images/survey_page.png)    | ![Verification](./images/verification_status_page.png) |
 
 ---
 
@@ -78,16 +91,24 @@ npm run preview
 ```
 src/
 ├── components/
-│   ├── Dashboard/        # Main dashboard page
-│   ├── Sidebar/          # Navigation sidebar
-│   ├── Header/           # Top header bar
-│   ├── Profile/          # Doctor profile page
-│   └── Appointments/     # Appointments management
+│   ├── Dashboard/        # Doctor dashboard components
+│   ├── Profile/          # Doctor profile components
+│   ├── AppointmentsPage/ # Appointments management
+│   ├── Sidebar/          # Navigation sidebars
+│   ├── Header/           # Top header components
+│   └── ...               # Shared UI components
+├── pages/
+│   ├── AdminDashboardPage.jsx # Admin overview
+│   ├── AdminDoctorPage.jsx    # Admin doctors management
+│   ├── AdminPatientsPage.jsx  # Admin patients management
+│   ├── DashboardPage.jsx      # Landing & authentication
+│   ├── ServeyPage.jsx         # Patient/Doctor surveys
+│   └── VerificationStatus.jsx # Verification status tracking
 ├── contexts/
 │   ├── UserContext.jsx   # Logged-in user state
 │   └── ThemeContext.jsx  # Dark / light mode
 ├── Services/
-│   └── mockData.js       # Mock patients data
+│   └── mockData.js       # Mock data and API services
 └── index.css             # Global styles + theme tokens
 ```
 
