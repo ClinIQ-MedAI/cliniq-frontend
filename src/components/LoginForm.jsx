@@ -9,7 +9,8 @@ import { Loader2 } from "lucide-react";
 import { useContext } from "react";
 import UserContext from "../contexts/UserContext";
 import { useNavigate } from "react-router-dom";
-import { login } from "../Services/authService";
+import api from "../apis/api";
+import API_ENDPOINTS from "../apis/endpoints";
 export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
     const {
         register,
@@ -21,21 +22,40 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
     const navigate = useNavigate();
 
     async function handleLoginSubmit(data) {
-        // send to api
         try {
             //  simulation
             await new Promise((resolve) => setTimeout(() => resolve(), 1500));
 
             //TODO: Edit Logic When Finish
-            console.log(data);
-            const doctor = await login(data?.email, data?.password);
-            loginData(doctor);
-            if (doctor) navigate("/doctor-dashboard");
+            const response = await api.post(API_ENDPOINTS.login, data);
+            const user = response.data;
+            console.log(user);
+            loginData(user, user.token);
+            if (user.role === "Admin") {
+                navigate("/admin/dashboard");
+            } else if (user.role === "Doctor") {
+                switch (user.doctorStatus) {
+                    case "INCOMPLETE_PROFILE":
+                        navigate("/survey");
+                        break;
+                    case "SUSPENDED":
+                        navigate("/");
+                        break;
+                    case "ACTIVE":
+                        navigate("/doctor-dashboard");
+                        break;
+                    case "REJECTED":
+                    case "PENDING_VERIFICATION":
+                        navigate("/verification-status");
+                        break;
+                    default:
+                        break;
+                }
+            }
 
             toast.success("user logged in successfully");
 
             setOpenLoginForm(false);
-            // TODO: store token in localstorage or something else
         } catch (error) {
             if (error.response) {
                 const status = error.response.status;

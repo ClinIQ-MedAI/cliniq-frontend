@@ -7,6 +7,9 @@ import {
     ChevronRight,
     Frown,
 } from "lucide-react";
+import api from "../../apis/api";
+import API_ENDPOINTS from "../../apis/endpoints";
+import { useMemo } from "react";
 
 const ini = (name = "") =>
     name
@@ -161,6 +164,24 @@ export default function AppointmentsPage() {
     const [filter, setFilter] = useState("all");
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
+    const [isFetchingAllAppointments, setIsFetchingAllAppointments] =
+        useState(false);
+    useEffect(() => {
+        async function getAllAppointments() {
+            try {
+                setIsFetchingAllAppointments(true);
+                const response = await api.get(
+                    API_ENDPOINTS.getAllAppointments,
+                );
+                setData(response.data);
+            } catch (error) {
+                console.log(error);
+            } finally {
+                setIsFetchingAllAppointments(false);
+            }
+        }
+        getAllAppointments();
+    }, []);
 
     useEffect(() => {
         setPage(1);
@@ -188,21 +209,36 @@ export default function AppointmentsPage() {
     const start = filtered.length ? (safePage - 1) * PER_PAGE + 1 : 0;
     const end = Math.min(safePage * PER_PAGE, filtered.length);
 
-    const toggle = (id, next) =>
-        setData((prev) =>
-            prev.map((a) =>
-                a.id === id
-                    ? { ...a, status: a.status === next ? "pending" : next }
-                    : a,
-            ),
-        );
-
-    const counts = {
-        total: data.length,
-        pending: data.filter((a) => a.status === "pending").length,
-        approved: data.filter((a) => a.status === "approved").length,
-        rejected: data.filter((a) => a.status === "rejected").length,
+    const toggle = (id, next) => {
+        const appointmentIndex = data.findIndex((p) => p.id === id);
+        if (appointmentIndex !== -1) {
+            api.patch(API_ENDPOINTS.updateAppointmentStatus(id), {
+                status: next,
+            })
+                .then(() => {
+                    setData((prevData) => {
+                        const updatedAppointments = [...prevData];
+                        updatedAppointments[appointmentIndex] = {
+                            ...updatedAppointments[appointmentIndex],
+                            status: next,
+                        };
+                        return updatedAppointments;
+                    });
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+        }
     };
+
+    const counts = useMemo(() => {
+        return {
+            total: data.length,
+            pending: data.filter((a) => a.status === "pending").length,
+            approved: data.filter((a) => a.status === "approved").length,
+            rejected: data.filter((a) => a.status === "rejected").length,
+        };
+    }, [data]);
 
     return (
         <div className="flex flex-col gap-5 pb-8 px-5 pt-3">
@@ -311,80 +347,85 @@ export default function AppointmentsPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {slice.map((a) => (
-                                <tr
-                                    key={a.id}
-                                    className="border-b border-border-sub last:border-none hover:bg-subtle transition-colors"
-                                >
-                                    <td className="px-3.5 py-2.5">
-                                        <div className="flex items-center gap-2">
-                                            <div
-                                                className="w-7 h-7 rounded-full bg-[#E6F1FB] text-[#0C447C] flex items-center
+                            {!isFetchingAllAppointments &&
+                                slice.map((a) => (
+                                    <tr
+                                        key={a.id}
+                                        className="border-b border-border-sub last:border-none hover:bg-subtle transition-colors"
+                                    >
+                                        <td className="px-3.5 py-2.5">
+                                            <div className="flex items-center gap-2">
+                                                <div
+                                                    className="w-7 h-7 rounded-full bg-[#E6F1FB] text-[#0C447C] flex items-center
                                       justify-center text-[11px] font-medium shrink-0"
-                                            >
-                                                {ini(a.name)}
+                                                >
+                                                    {ini(a.name)}
+                                                </div>
+                                                <span className="text-t1">
+                                                    {a.name}
+                                                </span>
                                             </div>
-                                            <span className="text-t1">
-                                                {a.name}
+                                        </td>
+                                        <td className="px-3.5 py-2.5 text-t2">
+                                            {a.disease}
+                                        </td>
+                                        <td className="px-3.5 py-2.5 text-t2">
+                                            {a.date}
+                                        </td>
+                                        <td className="px-3.5 py-2.5">
+                                            <span className="text-[11px] bg-subtle text-t2 px-2 py-0.5 rounded-full">
+                                                {a.visits}×
                                             </span>
-                                        </div>
-                                    </td>
-                                    <td className="px-3.5 py-2.5 text-t2">
-                                        {a.disease}
-                                    </td>
-                                    <td className="px-3.5 py-2.5 text-t2">
-                                        {a.date}
-                                    </td>
-                                    <td className="px-3.5 py-2.5">
-                                        <span className="text-[11px] bg-subtle text-t2 px-2 py-0.5 rounded-full">
-                                            {a.visits}×
-                                        </span>
-                                    </td>
-                                    <td className="px-3.5 py-2.5">
-                                        <StatusPill status={a.status} />
-                                    </td>
-                                    <td className="">
-                                        <div className="flex items-center justify-center gap-1.5">
-                                            <ActionBtn
-                                                active={a.status === "approved"}
-                                                activeClass="bg-[#E1F5EE] border-[#5DCAA5] text-[#085041]"
-                                                onClick={() =>
-                                                    toggle(a.id, "approved")
-                                                }
-                                                label={`Approve ${a.name}`}
-                                            >
-                                                <span
-                                                    style={{
-                                                        display: "flex",
-                                                        width: 14,
-                                                        height: 14,
-                                                    }}
+                                        </td>
+                                        <td className="px-3.5 py-2.5">
+                                            <StatusPill status={a.status} />
+                                        </td>
+                                        <td className="">
+                                            <div className="flex items-center justify-center gap-1.5">
+                                                <ActionBtn
+                                                    active={
+                                                        a.status === "approved"
+                                                    }
+                                                    activeClass="bg-[#E1F5EE] border-[#5DCAA5] text-[#085041]"
+                                                    onClick={() =>
+                                                        toggle(a.id, "approved")
+                                                    }
+                                                    label={`Approve ${a.name}`}
                                                 >
-                                                    <Check size={14} />
-                                                </span>
-                                            </ActionBtn>
-                                            <ActionBtn
-                                                active={a.status === "rejected"}
-                                                activeClass="bg-[#FCEBEB] border-[#F09595] text-[#A32D2D]"
-                                                onClick={() =>
-                                                    toggle(a.id, "rejected")
-                                                }
-                                                label={`Reject ${a.name}`}
-                                            >
-                                                <span
-                                                    style={{
-                                                        display: "flex",
-                                                        width: 14,
-                                                        height: 14,
-                                                    }}
+                                                    <span
+                                                        style={{
+                                                            display: "flex",
+                                                            width: 14,
+                                                            height: 14,
+                                                        }}
+                                                    >
+                                                        <Check size={14} />
+                                                    </span>
+                                                </ActionBtn>
+                                                <ActionBtn
+                                                    active={
+                                                        a.status === "rejected"
+                                                    }
+                                                    activeClass="bg-[#FCEBEB] border-[#F09595] text-[#A32D2D]"
+                                                    onClick={() =>
+                                                        toggle(a.id, "rejected")
+                                                    }
+                                                    label={`Reject ${a.name}`}
                                                 >
-                                                    <X size={14} />
-                                                </span>
-                                            </ActionBtn>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                                                    <span
+                                                        style={{
+                                                            display: "flex",
+                                                            width: 14,
+                                                            height: 14,
+                                                        }}
+                                                    >
+                                                        <X size={14} />
+                                                    </span>
+                                                </ActionBtn>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
                         </tbody>
                     </table>
                 )}

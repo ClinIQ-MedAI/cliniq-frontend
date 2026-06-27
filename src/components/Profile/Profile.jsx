@@ -13,45 +13,46 @@ import {
     GraduationCap,
     Building2,
 } from "lucide-react";
+import api from "../../apis/api";
+import { User } from "lucide-react";
+import API_ENDPOINTS from "../../apis/endpoints";
 
 export default function Profile({ onUpdateDoctorInfo }) {
+    const { user } = useUser();
     const [profile, setProfile] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({});
-    const { user } = useUser();
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const initialProfile = {
-            name: "Dr. Mohamed",
-            specialty: "Cardiologist",
-            degree: "M.B.B.S, Cardiology Specialist",
-            hospital: "Cliniq Hospital",
-            location: "Cairo, Egypt",
-            experience: "10+ Years",
-            workingHours: "9am – 5pm, Mon to Fri",
-            awards: "Best Cardiologist Award, 2023",
-            image: "/doctor3.png",
-            specialties: [
-                "Heart Disease",
-                "Pediatric Cardiology",
-                "Cardiac Surgery",
-                "Preventive Cardiology",
-            ],
-        };
-        setProfile(initialProfile);
-        setEditForm(initialProfile);
+        async function fetchProfile() {
+            try {
+                const res = await api.get(API_ENDPOINTS.getOrUpdateMe);
+                setProfile(res.data);
+                setEditForm(res.data);
+            } catch (err) {
+                console.error("Failed to fetch profile", err);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchProfile();
     }, []);
 
     const handleEditClick = () => setIsEditing(true);
-    const handleSaveClick = () => {
-        setProfile({ ...editForm });
-        setIsEditing(false);
-        if (onUpdateDoctorInfo) {
-            onUpdateDoctorInfo({
-                name: editForm.name,
-                specialty: editForm.specialty,
-                image: editForm.image,
-            });
+    const handleSaveClick = async () => {
+        try {
+            const res = await api.put(API_ENDPOINTS.getOrUpdateMe, editForm);
+            setProfile(res.data);
+            setIsEditing(false);
+            if (onUpdateDoctorInfo) {
+                onUpdateDoctorInfo({
+                    name: `${res.data.firstName} ${res.data.lastName}`,
+                    specialty: res.data.specialization,
+                });
+            }
+        } catch (err) {
+            console.error("Failed to update profile", err);
         }
     };
     const handleCancelClick = () => {
@@ -77,13 +78,15 @@ export default function Profile({ onUpdateDoctorInfo }) {
             reader.readAsDataURL(e.target.files[0]);
         }
     };
-
-    if (!profile) {
+    if (loading)
         return (
-            <div className="flex items-center justify-center h-64 text-slate-400 text-lg">
+            <div className="flex items-center justify-center h-64 text-slate-400">
                 Loading...
             </div>
         );
+
+    if (!profile) {
+        return null;
     }
 
     const displayData = isEditing ? editForm : profile;
@@ -103,7 +106,7 @@ export default function Profile({ onUpdateDoctorInfo }) {
                         <p className="text-sm text-t2 mt-1">
                             Logged in as{" "}
                             <span className="font-semibold text-t1">
-                                {user?.name}
+                                {user?.firstName} {user?.lastName}
                             </span>
                         </p>
                     </div>
@@ -180,7 +183,7 @@ export default function Profile({ onUpdateDoctorInfo }) {
                         </div>
 
                         {/* Name */}
-                        {isEditing ? (
+                        {/* {isEditing ? (
                             <input
                                 type="text"
                                 name="name"
@@ -190,12 +193,12 @@ export default function Profile({ onUpdateDoctorInfo }) {
                             />
                         ) : (
                             <h2 className="text-xl font-bold text-center leading-tight mb-1">
-                                {profile.name}
+                                {profile?.firstName}
                             </h2>
-                        )}
+                        )} */}
 
                         {/* Specialty tag */}
-                        {isEditing ? (
+                        {/* {isEditing ? (
                             <input
                                 type="text"
                                 name="specialty"
@@ -207,10 +210,10 @@ export default function Profile({ onUpdateDoctorInfo }) {
                             <span className="text-sm font-medium text-blue-200 mb-5">
                                 {profile.specialty}
                             </span>
-                        )}
+                        )} */}
 
                         {/* Quick-info pills */}
-                        <div className="w-full space-y-3 mt-2">
+                        {/* <div className="w-full space-y-3 mt-2">
                             <InfoPill
                                 icon={<Building2 size={14} />}
                                 label={displayData.hospital}
@@ -256,19 +259,150 @@ export default function Profile({ onUpdateDoctorInfo }) {
                                     />
                                 )}
                             </InfoPill>
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* ── RIGHT: Detail Panel ── */}
                     <div className="flex-1 p-8 space-y-8">
-                        {/* Specialties */}
+                        {/* Personal Info */}
                         <Section
+                            icon={<User size={16} />}
+                            title="Personal Information"
+                        >
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <Field
+                                    label="First Name"
+                                    name="firstName"
+                                    value={
+                                        isEditing
+                                            ? editForm.firstName
+                                            : profile.firstName
+                                    }
+                                    editing={isEditing}
+                                    onChange={handleInputChange}
+                                />
+                                <Field
+                                    label="Last Name"
+                                    name="lastName"
+                                    value={
+                                        isEditing
+                                            ? editForm.lastName
+                                            : profile.lastName
+                                    }
+                                    editing={isEditing}
+                                    onChange={handleInputChange}
+                                />
+                                <Field
+                                    label="Email Address"
+                                    name="email"
+                                    value={
+                                        isEditing
+                                            ? editForm.email
+                                            : profile.email
+                                    }
+                                    editing={isEditing}
+                                    onChange={handleInputChange}
+                                    type="email"
+                                />
+                                <Field
+                                    label="Date of Birth"
+                                    name="dateOfBirth"
+                                    value={
+                                        isEditing
+                                            ? editForm.dateOfBirth
+                                            : profile.dateOfBirth
+                                    }
+                                    editing={isEditing}
+                                    onChange={handleInputChange}
+                                    type="date"
+                                />
+                                <div className="sm:col-span-2">
+                                    <p className="text-xs font-semibold uppercase tracking-widest text-t3 mb-2">
+                                        Gender
+                                    </p>
+                                    {isEditing ? (
+                                        <div className="flex gap-3">
+                                            {["Male", "Female"].map((g) => (
+                                                <button
+                                                    key={g}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setEditForm((prev) => ({
+                                                            ...prev,
+                                                            gender: g,
+                                                        }))
+                                                    }
+                                                    className={`px-5 py-2 rounded-xl text-sm font-medium border-2 transition-colors ${
+                                                        editForm.gender === g
+                                                            ? "border-[#185FA5] bg-blue-50 text-[#185FA5]"
+                                                            : "border-border text-t2 bg-card"
+                                                    }`}
+                                                >
+                                                    {g}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <span className="text-sm font-medium text-t1 px-4 py-2 rounded-xl bg-subtle border border-border inline-block">
+                                            {profile.gender ?? "—"}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </Section>
+
+                        <Divider />
+
+                        {/* Professional Info */}
+                        <Section
+                            icon={<Stethoscope size={16} />}
+                            title="Professional Information"
+                        >
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <Field
+                                    label="Specialization"
+                                    name="specialization"
+                                    value={
+                                        isEditing
+                                            ? editForm.specialization
+                                            : profile.specialization
+                                    }
+                                    editing={isEditing}
+                                    onChange={handleInputChange}
+                                />
+                                <Field
+                                    label="License Number"
+                                    name="licenseNumber"
+                                    value={
+                                        isEditing
+                                            ? editForm.licenseNumber
+                                            : profile.licenseNumber
+                                    }
+                                    editing={isEditing}
+                                    onChange={handleInputChange}
+                                />
+                                <Field
+                                    label="License Expiry Date"
+                                    name="licenseExpiryDate"
+                                    value={
+                                        isEditing
+                                            ? editForm.licenseExpiryDate
+                                            : profile.licenseExpiryDate
+                                    }
+                                    editing={isEditing}
+                                    onChange={handleInputChange}
+                                    type="date"
+                                />
+                            </div>
+                        </Section>
+                        {/* Specialties */}
+                        {/* <Section
                             icon={<Stethoscope size={16} />}
                             title="Specialties"
                         >
                             {isEditing ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {editForm.specialties.map((spec, i) => (
+                                    {editForm?.specialties?.map((spec, i) => (
                                         <input
                                             key={i}
                                             type="text"
@@ -286,7 +420,7 @@ export default function Profile({ onUpdateDoctorInfo }) {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {profile.specialties.map((spec, i) => (
+                                    {profile?.specialties?.map((spec, i) => (
                                         <div
                                             key={i}
                                             className="flex items-center gap-3 px-4 py-3 rounded-xl bg-subtle border border-border"
@@ -304,12 +438,12 @@ export default function Profile({ onUpdateDoctorInfo }) {
                                     ))}
                                 </div>
                             )}
-                        </Section>
+                        </Section> */}
 
-                        <Divider />
+                        {/* <Divider /> */}
 
                         {/* Experience + Hours row */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <Section
                                 icon={<Briefcase size={16} />}
                                 title="Experience"
@@ -347,12 +481,12 @@ export default function Profile({ onUpdateDoctorInfo }) {
                                     </p>
                                 )}
                             </Section>
-                        </div>
+                        </div> */}
 
-                        <Divider />
+                        {/* <Divider /> */}
 
                         {/* Awards */}
-                        <Section
+                        {/* <Section
                             icon={<Award size={16} />}
                             title="Awards & Recognition"
                         >
@@ -375,7 +509,7 @@ export default function Profile({ onUpdateDoctorInfo }) {
                                     </span>
                                 </div>
                             )}
-                        </Section>
+                        </Section> */}
                     </div>
                 </div>
             </div>
@@ -411,6 +545,28 @@ function InfoPill({ icon, label, editing, children }) {
                 children
             ) : (
                 <span className="text-sm leading-snug">{label}</span>
+            )}
+        </div>
+    );
+}
+function Field({ label, name, value, editing, onChange, type = "text" }) {
+    return (
+        <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-t3 mb-2">
+                {label}
+            </p>
+            {editing ? (
+                <input
+                    type={type}
+                    name={name}
+                    value={value ?? ""}
+                    onChange={onChange}
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-border text-sm text-t1 bg-card focus:outline-none focus:border-blue-400 transition-colors"
+                />
+            ) : (
+                <p className="text-sm font-medium text-t1 px-4 py-2.5 rounded-xl bg-subtle border border-border">
+                    {value ?? "—"}
+                </p>
             )}
         </div>
     );

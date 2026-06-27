@@ -5,14 +5,10 @@ import "./Dashboard.css";
 import { Users, Calendar, TrendingUp, Star } from "lucide-react";
 import { Check } from "lucide-react";
 import { X } from "lucide-react";
-// import {
-//     Chart,
-//     BarController,
-//     BarElement,
-//     CategoryScale,
-//     LinearScale,
-//     Tooltip,
-// } from "chart.js";
+import api from "../../apis/api";
+import toast from "react-hot-toast";
+import API_ENDPOINTS from "../../apis/endpoints";
+import { Loader2 } from "lucide-react";
 
 /* ─── helpers ──────────────────────────────────────────────── */
 const ini = (name = "") =>
@@ -42,7 +38,6 @@ const getGreeting = () => {
 const MetricCard = ({ Icon, label, value, sub, subUp }) => (
     <div className="db-mc">
         <div className="db-mc-label">
-            {/* <span className={`ti ${icon}`} aria-hidden="true" /> */}
             <Icon />
             {label}
         </div>
@@ -71,48 +66,29 @@ const StatusPill = ({ status }) => (
 );
 
 /* ─── appointments table ────────────────────────────────────── */
-const INITIAL_ROWS = [
-    {
-        id: 1,
-        name: "Shyam Khamo",
-        disease: "Heart Disease",
-        date: "Jan 27",
-        status: "pending",
-    },
-    {
-        id: 2,
-        name: "Jean Lee Un",
-        disease: "Hypertension",
-        date: "Jan 27",
-        status: "pending",
-    },
-    {
-        id: 3,
-        name: "Clara Brook",
-        disease: "Diabetes",
-        date: "Jan 28",
-        status: "pending",
-    },
-    {
-        id: 4,
-        name: "Mark Osei",
-        disease: "Asthma",
-        date: "Jan 29",
-        status: "pending",
-    },
-];
-
 const AppointmentsTable = () => {
-    const [rows, setRows] = useState(INITIAL_ROWS);
-
-    const toggle = (id, next) =>
-        setRows((prev) =>
-            prev.map((r) =>
-                r.id === id
-                    ? { ...r, status: r.status === next ? "pending" : next }
-                    : r,
-            ),
+    const [pendingAppointments, setPendingAppointments] = useState([]);
+    useEffect(() => {
+        api.get(API_ENDPOINTS.getPendingAppointments)
+            .then((response) => setPendingAppointments(response.data))
+            .catch((err) => console.log(err));
+    }, []);
+    const toggle = (id, next) => {
+        const appointmentIndex = pendingAppointments.findIndex(
+            (p) => p.id === id,
         );
+        if (appointmentIndex !== -1) {
+            api.patch(API_ENDPOINTS.updateAppointmentStatus(id), {
+                status: next,
+            })
+                .then(() => {
+                    pendingAppointments.splice(appointmentIndex, 1);
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+        }
+    };
 
     return (
         <div className="overflow-x-auto w-full max-w-[100%]">
@@ -127,7 +103,7 @@ const AppointmentsTable = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {rows.map((r) => (
+                    {pendingAppointments.map((r) => (
                         <tr key={r.id}>
                             <td>
                                 <div className="db-name-cell">
@@ -183,37 +159,63 @@ const AppointmentsTable = () => {
 };
 
 /* ─── revenue chart ─────────────────────────────────────────── */
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-const REVENUE = [18500, 21000, 19800, 23000, 24580, 22500];
-const CONSULT = [7400, 8400, 7920, 9200, 9832, 9000];
-
 const RevenueChart = () => {
     const canvasRef = useRef(null);
     const chartRef = useRef(null);
+    const [isLoadingChartData, setIsLoadingChartData] = useState(true);
+    const [chartData, setChartData] = useState(null);
+    useEffect(() => {
+        async function GetDashboardMetricesData() {
+            try {
+                setIsLoadingChartData(true);
+
+                const response = await api.get(
+                    API_ENDPOINTS.getDashboardMetrices,
+                );
+                setChartData(response.data?.chartData);
+            } catch (error) {
+                console.log(error);
+            } finally {
+                setIsLoadingChartData(false);
+            }
+        }
+        GetDashboardMetricesData();
+    }, []);
 
     useEffect(() => {
-        if (!canvasRef.current || typeof window.Chart === "undefined") return;
         const isDark = window.matchMedia(
             "(prefers-color-scheme: dark)",
         ).matches;
         const gridColor = isDark ? "rgba(255,255,255,.06)" : "rgba(0,0,0,.06)";
         const tickColor = isDark ? "#888" : "#94a3b8";
 
+        if (
+            isLoadingChartData ||
+            !chartData ||
+            !canvasRef.current ||
+            typeof window.Chart === "undefined"
+        ) {
+            return;
+        }
+        if (chartRef.current) {
+            chartRef.current.destroy();
+        }
+
         chartRef.current = new window.Chart(canvasRef.current, {
             type: "bar",
             data: {
-                labels: MONTHS,
+                labels: chartData?.months || [],
                 datasets: [
                     {
                         label: "Total revenue",
-                        data: REVENUE,
+                        data: chartData?.revenue || [],
                         backgroundColor: "#185FA5",
                         borderRadius: 4,
                         barPercentage: 0.5,
                     },
                     {
                         label: "Consultations",
-                        data: CONSULT,
+                        data: chartData?.consultations || [],
                         backgroundColor: "#9FE1CB",
                         borderRadius: 4,
                         barPercentage: 0.5,
@@ -247,12 +249,27 @@ const RevenueChart = () => {
                 },
             },
         });
+        return () => {
+            if (chartRef.current) {
+                chartRef.current.destroy();
+                chartRef.current = null;
+            }
+        };
+    }, [chartData, isLoadingChartData]);
 
-        return () => chartRef.current?.destroy();
-    }, []);
-
+    if (isLoadingChartData) {
+        return (
+            <div className="flex justify-center gap-4">
+                <Loader2 className="animate-spin" />
+                <div>Loading Chart Data...</div>
+            </div>
+        );
+    }
     return (
-        <div className="db-chart-block">
+        <div
+            className="db-chart-block"
+            style={{ display: isLoadingChartData ? "none" : "" }}
+        >
             <div className="db-legend">
                 <span className="db-leg-item">
                     <span
@@ -314,7 +331,6 @@ export default function Dashboard() {
             dot: "lo",
         },
     ];
-
     return (
         <div className="db-root">
             {/* welcome */}
@@ -322,7 +338,8 @@ export default function Dashboard() {
             <div className="db-welcome">
                 <div>
                     <h1 className="db-welcome-name">
-                        {getGreeting()}, {user?.name ?? "Doctor"}
+                        {getGreeting()},{" "}
+                        {`${user?.firstName} ${user?.lastName}`}
                     </h1>
                     <p className="db-welcome-sub">
                         Overview of appointments, patients and announcements
@@ -387,8 +404,9 @@ export default function Dashboard() {
                         <AppointmentsTable />
                     </div>
 
-                    <div className="db-card">
+                    <div className="db-card text-center">
                         <div className="db-card-title">Monthly revenue</div>
+
                         <RevenueChart />
                     </div>
                 </div>

@@ -43,6 +43,7 @@ function NavItem({ to, icon, label, badge }) {
 function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
     const { user } = useUser();
     const navigate = useNavigate();
+    const { logout } = useUser();
     const initials = (name = "") =>
         name
             .split(" ")
@@ -99,17 +100,19 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
             {/* Footer — user + sign out */}
             <div className="sb-footer">
                 <div className="sb-user">
-                    <div className="sb-av">{initials(user?.name)}</div>
+                    <div className="sb-av">
+                        {initials(user?.firstName + " " + user?.lastName)}
+                    </div>
                     <div className="sb-user-info">
                         <div className="sb-user-name">
-                            {user?.name ?? "Doctor"}
+                            {user?.firstName} {user?.lastName ?? ""}
                         </div>
                         <div className="sb-user-role">Cardiologist</div>
                     </div>
                     <button
                         className="sb-signout"
                         aria-label="Sign out"
-                        onClick={() => navigate("/")}
+                        onClick={() => logout()}
                     >
                         <LogOut />
                     </button>

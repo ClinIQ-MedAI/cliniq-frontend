@@ -11,7 +11,7 @@ import API_ENDPOINTS from "../apis/endpoints";
 import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
-import { signup } from "../Services/authService";
+// import { signup } from "../Services/authService";
 export const SignUpForm = ({ setOpenSignUpForm, setOpenLoginForm }) => {
     const [checked, setChecked] = useState(false);
 
@@ -27,19 +27,15 @@ export const SignUpForm = ({ setOpenSignUpForm, setOpenLoginForm }) => {
 
     //function for handing submitting the form to make an account
     async function handleSignUpSubmit(data) {
-        const name = `${data.fname} ${data.lname}`;
-        const combinedData = { ...data, name };
-
-        delete combinedData.fname;
-        delete combinedData.lname;
-
         // send to api
         try {
-            signup(data.name, data.email, data.password);
+            // signup(data.name, data.email, data.password);
 
-            // const response = await api.post(API_ENDPOINTS.signup, combinedData, {
-            //     headers: { "Content-Type": 'application/json' }
-            // })
+            const response = await api.post(API_ENDPOINTS.signup, data, {
+                headers: { "Content-Type": "application/json" },
+            });
+
+            console.log(response);
 
             toast.success("user has been created successfully");
             setOpenSignUpForm(false);
@@ -141,11 +137,11 @@ export const SignUpForm = ({ setOpenSignUpForm, setOpenLoginForm }) => {
                                 <div className="flex flex-1 flex-col">
                                     <label htmlFor="">First Name</label>
                                     <input
-                                        {...register("fname", {
+                                        {...register("firstName", {
                                             required: "FirstName is required",
                                         })}
                                         type="text"
-                                        name="fname"
+                                        name="firstName"
                                         placeholder="Your First Name"
                                         className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-5 py-4 bg-gray-200"
                                     />
@@ -158,11 +154,11 @@ export const SignUpForm = ({ setOpenSignUpForm, setOpenLoginForm }) => {
                                 <div className="flex flex-1 flex-col">
                                     <label htmlFor="">Last Name</label>
                                     <input
-                                        {...register("lname", {
+                                        {...register("lastName", {
                                             required: "LastName is required",
                                         })}
                                         type="text"
-                                        name="lname"
+                                        name="lastName"
                                         placeholder="Your Last Name"
                                         className="placeholder:text-center focus:ring-2 outline-0 ring-blue-400  rounded-lg border border-[#DEDEDE] px-5 py-4 bg-gray-200"
                                     />

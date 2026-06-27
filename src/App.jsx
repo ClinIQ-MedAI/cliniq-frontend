@@ -3,22 +3,18 @@ import "./App.css";
 import { DoctorLayout } from "./components/DoctorLayout";
 import { DashboardPage } from "./pages/DashboardPage";
 import { useState } from "react";
-import Sidebar from "./components/Sidebar/Sidebar";
-import Header from "./components/Header/Header";
 import "./App.css";
 import Dashboard from "./components/Dashboard/Dashboard";
 import AppointmentsPage from "./components/AppointmentsPage/AppointmentsPage";
 import Profile from "./components/Profile/Profile";
 import { DashboardLayout } from "./components/Dashboard/Layout/DashboardLayout";
-
-function Appointments() {
-    return (
-        <div>
-            <h2>Appointments</h2>
-            <p>Appointments table placeholder</p>
-        </div>
-    );
-}
+import { Authentication } from "./components/Authentication";
+import Survey from "./pages/ServeyPage";
+import VerificationStatus from "./pages/VerificationStatus";
+import { AdminDashboard } from "./pages/AdminDashboardPage";
+import { AdminPatients } from "./pages/AdminPatientsPage";
+import { AdminSidebar } from "./components/AdminSidebar";
+import { AdminDoctors } from "./pages/AdminDoctorPage";
 
 function Patients() {
     return (
@@ -53,29 +49,45 @@ function App() {
 
     return (
         <>
-            <Router>
-                <Routes>
+            <Routes>
+                <Route
+                    element={
+                        <DoctorLayout
+                            setOpenSignUpForm={setOpenSignUpForm}
+                            setOpenLoginForm={setOpenLoginForm}
+                        />
+                    }
+                >
                     <Route
+                        path={"/"}
                         element={
-                            <DoctorLayout
-                                setOpenSignUpForm={setOpenSignUpForm}
+                            <DashboardPage
+                                openLoginForm={openLoginForm}
                                 setOpenLoginForm={setOpenLoginForm}
+                                setOpenSignUpForm={setOpenSignUpForm}
+                                openSignUpForm={openSignUpForm}
                             />
                         }
-                    >
-                        <Route
-                            path={"/"}
-                            element={
-                                <DashboardPage
-                                    openLoginForm={openLoginForm}
-                                    setOpenLoginForm={setOpenLoginForm}
-                                    setOpenSignUpForm={setOpenSignUpForm}
-                                    openSignUpForm={openSignUpForm}
-                                />
-                            }
-                        />
-                    </Route>
+                    />
+                </Route>
 
+                <Route
+                    path="/admin"
+                    element={<Authentication allowed={["Admin"]} />}
+                >
+                    <Route element={<AdminSidebar />}>
+                        <Route path="dashboard" element={<AdminDashboard />} />
+                        <Route path="patients" element={<AdminPatients />} />
+                        <Route path="doctors" element={<AdminDoctors />} />
+                    </Route>
+                </Route>
+                <Route path="/survey" element={<Survey />} />
+                <Route
+                    path="/verification-status"
+                    element={<VerificationStatus />}
+                />
+
+                <Route element={<Authentication allowed={["Doctor"]} />}>
                     <Route element={<DashboardLayout />}>
                         <Route
                             path="/doctor-dashboard"
@@ -93,8 +105,8 @@ function App() {
                         <Route path="/settings" element={<Settings />} />
                         <Route path="/profile" element={<Profile />} />
                     </Route>
-                </Routes>
-            </Router>
+                </Route>
+            </Routes>
         </>
     );
 }
