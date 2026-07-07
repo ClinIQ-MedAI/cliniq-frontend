@@ -23,15 +23,17 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
 
     async function handleLoginSubmit(data) {
         try {
-            //  simulation
-            await new Promise((resolve) => setTimeout(() => resolve(), 1500));
-
             //TODO: Edit Logic When Finish
-            const response = await api.post(API_ENDPOINTS.login, data);
+            data.otpCode = null;
+            debugger;
+            const response = await api.post(API_ENDPOINTS.Auth.login, data);
             const user = response.data;
             console.log(user);
-            loginData(user, user.token);
-            if (user.role === "Admin") {
+            loginData(user, user.token, data.email);
+            if (
+                user.role === "Admin" ||
+                data.email === import.meta.env.VITE_ADMIN_ACCOUNT
+            ) {
                 navigate("/admin/dashboard");
             } else if (user.role === "Doctor") {
                 switch (user.doctorStatus) {
@@ -62,6 +64,12 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
                 const serverMessage =
                     error.response.data?.message || "An error occurred";
                 const msgLower = serverMessage.toLowerCase();
+                const code = error.response.data?.errors[0]?.code;
+                if (code === "Auth.NotVerified") {
+                    return navigate("/verify-email", {
+                        state: { email: data.email },
+                    });
+                }
                 if (status === 400) {
                     if (msgLower.includes("email")) {
                         setError("email", {
@@ -203,7 +211,15 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
                                     </p>
                                 )}
                             </div>
-
+                            <button
+                                type="button"
+                                className="text-(--primary-color) self-start cursor-pointer hover:underline"
+                                onClick={() => {
+                                    navigate("/forgot-password");
+                                }}
+                            >
+                                forgot password
+                            </button>
                             <button
                                 type={"submit"}
                                 disabled={isSubmitting}
@@ -215,8 +231,8 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
                                 )}
                             </button>
 
-                            <p className="flex justify-center mt-20">
-                                Don't have an account ?{" "}
+                            <p className="flex justify-center items-center mt-20">
+                                Don't have an account ?
                                 <button
                                     type="button"
                                     className="text-(--primary-color) cursor-pointer hover:underline"

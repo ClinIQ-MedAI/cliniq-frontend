@@ -13,12 +13,26 @@ export function UserProvider({ children }) {
     const navigate = useNavigate();
 
     //TODO:Edit Login Logic when api finishes
-    function loginData(user, token) {
+    function loginData(user, token, email) {
+        if (email === import.meta.env.VITE_ADMIN_ACCOUNT) {
+            user.role = "Admin";
+        } else {
+            user.role = "Doctor";
+        }
         localStorage.setItem("cliniq_user", JSON.stringify(user));
         localStorage.setItem("cliniq_token", token);
         setUser(user);
         setToken(token);
     }
+
+    function updateUser(partialUser) {
+        setUser((prev) => {
+            const next = { ...prev, ...partialUser };
+            localStorage.setItem("cliniq_user", JSON.stringify(next));
+            return next;
+        });
+    }
+
     function logout() {
         localStorage.removeItem("cliniq_user");
         localStorage.removeItem("cliniq_token");
@@ -26,8 +40,11 @@ export function UserProvider({ children }) {
         setToken(null);
         navigate("/");
     }
+
     return (
-        <UserContext.Provider value={{ user, token, loginData, logout }}>
+        <UserContext.Provider
+            value={{ user, token, loginData, updateUser, logout }}
+        >
             {children}
         </UserContext.Provider>
     );

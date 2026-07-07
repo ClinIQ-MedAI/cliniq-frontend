@@ -1,19 +1,14 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useUser } from "../contexts/UserContext";
+import toast from "react-hot-toast";
 
-export const Authentication = ({ allowed }) => {
-    const { user } = useUser();
-
-    if (!allowed.includes(user?.role)) {
-        return <Navigate to={"/"} />;
-    } else if (user?.doctorStatus === "INCOMPLETE_PROFILE") {
-        return <Navigate to={"/survey"} />;
-    } else if (user?.doctorStatus === "PENDING_VERIFICATION") {
-        return <Navigate to={"/survey"} />;
-    } else if (user?.doctorStatus === "REJECTED") {
-        return <Navigate to={"/survey"} />;
-    } else if (user?.doctorStatus === "SUSPENDED" || user?.isDisabled) {
-        return <Navigate to={"/"} />;
+export const Authentication = () => {
+    const { token } = useUser();
+    const navigate = useNavigate();
+    if (!token) {
+        toast("not logged in try logging in to your account");
+        return navigate("/");
     }
+
     return <Outlet />;
 };

@@ -1,16 +1,14 @@
 import { http, HttpResponse } from "msw";
 import { BASE_URL } from "../config";
 import { fakeDoctor } from "./auth";
-import { doctorProfile } from "./doctor";
+import { loadState, saveState } from "../storage";
 
-export let doctors = [
+export let doctors = loadState("doctors", [
     {
         id: "doctor-001",
         firstName: "Ahmed",
         lastName: "Hassan",
         email: "doctor@cliniq.com",
-        specialization: "Cardiology",
-        licenseNumber: "LIC-2024-001",
         isDisabled: false,
         status: "INCOMPLETE_PROFILE",
     },
@@ -19,8 +17,6 @@ export let doctors = [
         firstName: "Mona",
         lastName: "Ibrahim",
         email: "mona@cliniq.com",
-        specialization: "Dermatology",
-        licenseNumber: "LIC-2024-002",
         isDisabled: false,
         status: "PENDING_VERIFICATION",
     },
@@ -29,14 +25,12 @@ export let doctors = [
         firstName: "Karim",
         lastName: "Saleh",
         email: "karim@cliniq.com",
-        specialization: "Neurology",
-        licenseNumber: "LIC-2024-003",
         isDisabled: false,
         status: "REJECTED",
     },
-];
+]);
 
-let patients = [
+let patients = loadState("patients", [
     {
         id: "patient-001",
         firstName: "Sara",
@@ -61,242 +55,213 @@ let patients = [
         isDisabled: true,
         status: "SUSPENDED",
     },
-];
+]);
 
-const bookings = [
+let bookings = loadState("bookings", [
     {
         id: 1,
-        doctorName: "Ahmed Hassan",
-        patientName: "Sara Mohamed",
         date: "2026-06-28",
+        patientName: "Sara Mohamed",
+        doctorName: "Ahmed Hassan",
         status: "CONFIRMED",
     },
     {
         id: 2,
-        doctorName: "Ahmed Hassan",
-        patientName: "Omar Khaled",
         date: "2026-06-28",
+        patientName: "Omar Khaled",
+        doctorName: "Ahmed Hassan",
         status: "PENDING",
     },
     {
         id: 3,
-        doctorName: "Mona Ibrahim",
-        patientName: "Nour Ahmed",
         date: "2026-06-29",
+        patientName: "Nour Ahmed",
+        doctorName: "Mona Ibrahim",
         status: "COMPLETED",
     },
     {
         id: 4,
-        doctorName: "Ahmed Hassan",
-        patientName: "Sara Mohamed",
         date: "2026-06-30",
+        patientName: "Sara Mohamed",
+        doctorName: "Ahmed Hassan",
         status: "CANCELLED",
     },
-];
+]);
 
 export const adminHandlers = [
-    // --- DOCTORS ---
-    // GET /admin/doctors
-    http.get(`${BASE_URL}/admin/doctors`, ({ request }) => {
-        const url = new URL(request.url);
-        const page = Number(url.searchParams.get("page") || 1);
-        const pageSize = 10;
-        const start = (page - 1) * pageSize;
-        return HttpResponse.json({
-            items: doctors.slice(start, start + pageSize),
-            totalCount: doctors.length,
-            page,
-            pageSize,
-        });
-    }),
+    http.get(`${BASE_URL}/admin/Doctors`, () => HttpResponse.json(doctors)),
 
-    // GET /admin/doctors/:id
-    http.get(`${BASE_URL}/admin/doctors/:id`, ({ params }) => {
+    http.get(`${BASE_URL}/admin/Doctors/:id`, ({ params }) => {
         const doc = doctors.find((d) => d.id === params.id);
-        if (!doc)
-            return HttpResponse.json(
-                { message: "Doctor not found." },
-                { status: 404 },
-            );
-        return HttpResponse.json(doc);
+        return doc
+            ? HttpResponse.json(doc)
+            : HttpResponse.json(
+                  { message: "Doctor not found." },
+                  { status: 404 },
+              );
     }),
 
-    // POST /admin/doctors
-    http.post(`${BASE_URL}/admin/doctors`, async ({ request }) => {
+    http.post(`${BASE_URL}/admin/Doctors`, async ({ request }) => {
         const body = await request.json();
         const newDoctor = {
-            id: `doctor-00${doctors.length + 1}`,
+            id: crypto.randomUUID(),
+            firstName: body.firstName,
+            lastName: body.lastName,
+            email: body.email,
             isDisabled: false,
             status: "ACTIVE",
-            ...body,
         };
         doctors.push(newDoctor);
+        saveState("doctors", doctors);
         return HttpResponse.json(newDoctor, { status: 201 });
     }),
 
-    // PUT /admin/doctors/:id
-    http.put(`${BASE_URL}/admin/doctors/:id`, async ({ request, params }) => {
+    http.put(`${BASE_URL}/admin/Doctors/:id`, async ({ request, params }) => {
         const body = await request.json();
         doctors = doctors.map((d) => {
-            if (d.id === params.id) {
-                fakeDoctor.doctorStatus = body.doctorStatus
-                    ? body.doctorStatus
-                    : fakeDoctor.doctorStatus;
-                doctorProfile.status = body.doctorStatus;
-                return { ...d, ...body };
-            } else {
-                return d;
+            if (d.id !== params.id) return d;
+            if (body.status) {
+                fakeDoctor.doctorStatus = body.status;
+                saveState("fakeDoctor", fakeDoctor);
             }
+            return {
+                ...d,
+                firstName: body.firstName ?? d.firstName,
+                lastName: body.lastName ?? d.lastName,
+                email: body.email ?? d.email,
+                status: body.status ?? d.status,
+            };
         });
-
-        return HttpResponse.json(doctors.find((d) => d.id === params.id));
+        saveState("doctors", doctors);
+        return new HttpResponse(null, { status: 204 });
     }),
 
-    // PATCH /admin/doctors/:id/status
     http.patch(
-        `${BASE_URL}/admin/doctors/:id/status`,
+        `${BASE_URL}/admin/Doctors/:id/status`,
         async ({ request, params }) => {
             const body = await request.json();
             doctors = doctors.map((d) => {
-                if (d.id === params.id) {
-                    doctorProfile.isDisabled = !body.active;
-                    fakeDoctor.isDisabled = !body.active;
-                    fakeDoctor.doctorStatus = "SUSPENDED";
-                    doctorProfile.status = "SUSPENDED";
-                    return { ...d, isDisabled: !body.active };
-                } else {
-                    return d;
+                if (d.id !== params.id) return d;
+                if (d.id === fakeDoctor.id) {
+                    fakeDoctor.doctorStatus = body.active
+                        ? "ACTIVE"
+                        : "SUSPENDED";
+                    saveState("fakeDoctor", fakeDoctor);
                 }
+                return { ...d, isDisabled: !body.active };
             });
-            return HttpResponse.json({ message: "Status updated." });
+            saveState("doctors", doctors);
+            return new HttpResponse(null, { status: 204 });
         },
     ),
 
-    // PUT /admin/doctors/:id/unlock
-    http.put(`${BASE_URL}/admin/doctors/:id/unlock`, ({ params }) => {
+    http.put(`${BASE_URL}/admin/Doctors/:id/unlock`, ({ params }) => {
         doctors = doctors.map((d) => {
-            if (d.id === params.id) {
-                doctorProfile.isDisabled = false;
-                fakeDoctor.isDisabled = false;
+            if (d.id !== params.id) return d;
+            if (d.id === fakeDoctor.id) {
                 fakeDoctor.doctorStatus = "ACTIVE";
-                doctorProfile.status = "ACTIVE";
-                return { ...d, isDisabled: false };
-            } else {
-                return d;
+                saveState("fakeDoctor", fakeDoctor);
             }
+            return { ...d, isDisabled: false };
         });
-        return HttpResponse.json({ message: "Doctor unlocked." });
+        saveState("doctors", doctors);
+        return new HttpResponse(null, { status: 204 });
     }),
 
-    // POST /admin/doctors/:id/approve
-    http.post(`${BASE_URL}/admin/doctors/:id/approve`, ({ params }) => {
+    http.post(`${BASE_URL}/admin/Doctors/:id/approve`, ({ params }) => {
         doctors = doctors.map((d) => {
-            if (d.id === params.id) {
+            if (d.id !== params.id) return d;
+            if (d.id === fakeDoctor.id) {
                 fakeDoctor.doctorStatus = "ACTIVE";
-                doctorProfile.status = "ACTIVE";
-                return { ...d, status: "ACTIVE" };
-            } else {
-                return d;
+                saveState("fakeDoctor", fakeDoctor);
             }
+            return { ...d, status: "ACTIVE" };
         });
-        return HttpResponse.json({ message: "Doctor approved." });
+        saveState("doctors", doctors);
+        return new HttpResponse(null, { status: 204 });
     }),
 
-    // POST /admin/doctors/:id/reject
     http.post(
-        `${BASE_URL}/admin/doctors/:id/reject`,
+        `${BASE_URL}/admin/Doctors/:id/reject`,
         async ({ request, params }) => {
             const body = await request.json();
             doctors = doctors.map((d) =>
                 d.id === params.id ? { ...d, status: "REJECTED" } : d,
             );
+            saveState("doctors", doctors);
             console.log(
                 `[MSW] Doctor ${params.id} rejected. Reason: ${body.reason}`,
             );
-            return HttpResponse.json({ message: "Doctor rejected." });
+            return new HttpResponse(null, { status: 204 });
         },
     ),
 
     // --- PATIENTS ---
-    // GET /admin/patients
-    http.get(`${BASE_URL}/admin/patients`, ({ request }) => {
-        const url = new URL(request.url);
-        const page = Number(url.searchParams.get("page") || 1);
-        const pageSize = 10;
-        const start = (page - 1) * pageSize;
-        return HttpResponse.json({
-            items: patients.slice(start, start + pageSize),
-            totalCount: patients.length,
-            page,
-            pageSize,
-        });
-    }),
+    http.get(`${BASE_URL}/admin/Patients`, () => HttpResponse.json(patients)),
 
-    // GET /admin/patients/:id
-    http.get(`${BASE_URL}/admin/patients/:id`, ({ params }) => {
+    http.get(`${BASE_URL}/admin/Patients/:id`, ({ params }) => {
         const patient = patients.find((p) => p.id === params.id);
-        if (!patient)
-            return HttpResponse.json(
-                { message: "Patient not found." },
-                { status: 404 },
-            );
-        return HttpResponse.json(patient);
+        return patient
+            ? HttpResponse.json(patient)
+            : HttpResponse.json(
+                  { message: "Patient not found." },
+                  { status: 404 },
+              );
     }),
 
-    // POST /admin/patients
-    http.post(`${BASE_URL}/admin/patients`, async ({ request }) => {
+    http.post(`${BASE_URL}/admin/Patients`, async ({ request }) => {
         const body = await request.json();
         const newPatient = {
-            id: `patient-00${patients.length + 1}`,
+            id: crypto.randomUUID(),
+            firstName: body.firstName,
+            lastName: body.lastName,
+            email: body.email,
             isDisabled: false,
             status: "ACTIVE",
-            ...body,
         };
         patients.push(newPatient);
+        saveState("patients", patients);
         return HttpResponse.json(newPatient, { status: 201 });
     }),
 
-    // PUT /admin/patients/:id
-    http.put(`${BASE_URL}/admin/patients/:id`, async ({ request, params }) => {
+    http.put(`${BASE_URL}/admin/Patients/:id`, async ({ request, params }) => {
         const body = await request.json();
         patients = patients.map((p) =>
             p.id === params.id ? { ...p, ...body } : p,
         );
-        return HttpResponse.json(patients.find((p) => p.id === params.id));
+        saveState("patients", patients);
+        return new HttpResponse(null, { status: 204 });
     }),
 
-    // PATCH /admin/patients/:id/status
     http.patch(
-        `${BASE_URL}/admin/patients/:id/status`,
+        `${BASE_URL}/admin/Patients/:id/status`,
         async ({ request, params }) => {
             const body = await request.json();
             patients = patients.map((p) =>
                 p.id === params.id ? { ...p, isDisabled: !body.active } : p,
             );
-            return HttpResponse.json({ message: "Status updated." });
+            saveState("patients", patients);
+            return new HttpResponse(null, { status: 204 });
         },
     ),
 
-    // PUT /admin/patients/:id/unlock
-    http.put(`${BASE_URL}/admin/patients/:id/unlock`, ({ params }) => {
+    http.put(`${BASE_URL}/admin/Patients/:id/unlock`, ({ params }) => {
         patients = patients.map((p) =>
             p.id === params.id ? { ...p, isDisabled: false } : p,
         );
-        return HttpResponse.json({ message: "Patient unlocked." });
+        saveState("patients", patients);
+        return new HttpResponse(null, { status: 204 });
     }),
 
     // --- BOOKINGS ---
-    // GET /admin/bookings
     http.get(`${BASE_URL}/admin/bookings`, ({ request }) => {
         const url = new URL(request.url);
         const page = Number(url.searchParams.get("page") || 1);
-        const pageSize = 10;
+        const pageSize = Number(url.searchParams.get("pageSize") || 10);
         const start = (page - 1) * pageSize;
         return HttpResponse.json({
-            items: bookings.slice(start, start + pageSize),
-            totalCount: bookings.length,
-            page,
-            pageSize,
+            total: bookings.length,
+            data: bookings.slice(start, start + pageSize),
         });
     }),
 ];

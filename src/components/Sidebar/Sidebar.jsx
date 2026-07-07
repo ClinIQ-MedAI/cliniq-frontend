@@ -17,6 +17,11 @@ const NAV_MAIN = [
         label: "Appointments",
         badge: 3,
     },
+    {
+        to: "/messages",
+        icon: "ti-message-circle",
+        label: "Messages",
+    },
     { to: "/tables", icon: "ti-table", label: "Tables" },
 ];
 

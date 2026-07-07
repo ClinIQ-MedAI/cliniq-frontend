@@ -15,6 +15,11 @@ import { AdminDashboard } from "./pages/AdminDashboardPage";
 import { AdminPatients } from "./pages/AdminPatientsPage";
 import { AdminSidebar } from "./components/AdminSidebar";
 import { AdminDoctors } from "./pages/AdminDoctorPage";
+import { VerifyEmailPage } from "./pages/VerifyEmailPage";
+import { AuthorizationRoleGuard } from "./components/guards/AuthorizationRoleGuard";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { ConversationsPage } from "./pages/ConversationsPage";
+import ChatPage from "./pages/ChatPage";
 
 function Patients() {
     return (
@@ -69,16 +74,30 @@ function App() {
                             />
                         }
                     />
+                    <Route
+                        path="/forgot-password"
+                        element={<ForgotPasswordPage />}
+                    />
                 </Route>
-
-                <Route
-                    path="/admin"
-                    element={<Authentication allowed={["Admin"]} />}
-                >
-                    <Route element={<AdminSidebar />}>
-                        <Route path="dashboard" element={<AdminDashboard />} />
-                        <Route path="patients" element={<AdminPatients />} />
-                        <Route path="doctors" element={<AdminDoctors />} />
+                <Route path="/verify-email" element={<VerifyEmailPage />} />
+                <Route element={<Authentication />}>
+                    <Route
+                        element={<AuthorizationRoleGuard allowed={["Admin"]} />}
+                    >
+                        <Route element={<AdminSidebar />}>
+                            <Route
+                                path="/admin/dashboard"
+                                element={<AdminDashboard />}
+                            />
+                            <Route
+                                path="/admin/patients"
+                                element={<AdminPatients />}
+                            />
+                            <Route
+                                path="/admin/doctors"
+                                element={<AdminDoctors />}
+                            />
+                        </Route>
                     </Route>
                 </Route>
                 <Route path="/survey" element={<Survey />} />
@@ -86,24 +105,34 @@ function App() {
                     path="/verification-status"
                     element={<VerificationStatus />}
                 />
-
-                <Route element={<Authentication allowed={["Doctor"]} />}>
-                    <Route element={<DashboardLayout />}>
-                        <Route
-                            path="/doctor-dashboard"
-                            element={<Dashboard />}
-                        />
-                        <Route
-                            path="/appointments"
-                            element={<AppointmentsPage />}
-                        />
-                        <Route path="/patients" element={<Patients />} />
-                        <Route
-                            path="/announcements"
-                            element={<Announcements />}
-                        />
-                        <Route path="/settings" element={<Settings />} />
-                        <Route path="/profile" element={<Profile />} />
+                <Route element={<Authentication />}>
+                    <Route
+                        element={
+                            <AuthorizationRoleGuard allowed={["Doctor"]} />
+                        }
+                    >
+                        <Route element={<DashboardLayout />}>
+                            <Route
+                                path="/doctor-dashboard"
+                                element={<Dashboard />}
+                            />
+                            <Route
+                                path="/appointments"
+                                element={<AppointmentsPage />}
+                            />
+                            <Route path="/patients" element={<Patients />} />
+                            <Route
+                                path="/announcements"
+                                element={<Announcements />}
+                            />
+                            <Route path="/settings" element={<Settings />} />
+                            <Route path="/profile" element={<Profile />} />
+                            <Route
+                                path="/conversations"
+                                element={<ConversationsPage />}
+                            />
+                            <Route path="/messages" element={<ChatPage />} />
+                        </Route>
                     </Route>
                 </Route>
             </Routes>

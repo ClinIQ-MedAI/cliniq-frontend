@@ -16,6 +16,7 @@ import {
 import { toast } from "react-hot-toast";
 import api from "../apis/api";
 import API_ENDPOINTS from "../apis/endpoints";
+import { useUser } from "../contexts/UserContext";
 
 const STEPS = [
     { id: 1, title: "Professional Info", icon: Stethoscope },
@@ -24,6 +25,7 @@ const STEPS = [
 ];
 
 export default function Survey() {
+    const { updateUser } = useUser();
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,18 +80,22 @@ export default function Survey() {
         }
         setIsSubmitting(true);
         try {
-            // In production: upload files to storage first, get URLs back
-            // In mock: use fake object URLs
             const personalIdentityPhotoUrl = URL.createObjectURL(idPhotoFile);
             const medicalLicenseUrl = URL.createObjectURL(licenseFile);
 
-            await api.post(API_ENDPOINTS.survey, {
+            await api.post(API_ENDPOINTS.Doctor.survey, {
                 specialization: data.specialization,
                 licenseNumber: data.licenseNumber,
                 licenseExpiryDate: data.licenseExpiryDate,
                 personalIdentityPhotoUrl,
                 medicalLicenseUrl,
             });
+
+            // Survey succeeded → the real doctorStatus is now PENDING_VERIFICATION
+            // on the backend/token, but our local user object doesn't know that yet.
+            // Update it here so VerificationStatus.jsx shows the right screen
+            // immediately, without waiting on /doctor/me (which never returns status).
+            updateUser({ doctorStatus: "PENDING_VERIFICATION" });
 
             toast.success("Survey submitted successfully!");
             navigate("/verification-status");

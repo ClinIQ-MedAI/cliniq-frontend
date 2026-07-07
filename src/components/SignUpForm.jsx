@@ -11,10 +11,10 @@ import API_ENDPOINTS from "../apis/endpoints";
 import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
-// import { signup } from "../Services/authService";
+import { useNavigate } from "react-router-dom";
 export const SignUpForm = ({ setOpenSignUpForm, setOpenLoginForm }) => {
     const [checked, setChecked] = useState(false);
-
+    const navigate = useNavigate();
     const {
         register,
         watch,
@@ -29,17 +29,13 @@ export const SignUpForm = ({ setOpenSignUpForm, setOpenLoginForm }) => {
     async function handleSignUpSubmit(data) {
         // send to api
         try {
-            // signup(data.name, data.email, data.password);
-
-            const response = await api.post(API_ENDPOINTS.signup, data, {
-                headers: { "Content-Type": "application/json" },
-            });
+            const response = await api.post(API_ENDPOINTS.Auth.signup, data);
 
             console.log(response);
 
             toast.success("user has been created successfully");
             setOpenSignUpForm(false);
-            setOpenLoginForm(true);
+            navigate("/verify-email", { state: { email: data.email } });
         } catch (error) {
             if (error.response) {
                 const status = error.response.status;

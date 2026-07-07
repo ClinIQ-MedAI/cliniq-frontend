@@ -6,43 +6,15 @@ import api from "../apis/api";
 import API_ENDPOINTS from "../apis/endpoints";
 
 export default function VerificationStatus() {
-    const { user, loginData } = useUser();
+    const { user } = useUser();
     const navigate = useNavigate();
-    const [status, setStatus] = useState(user?.doctorStatus);
-    const [rejectionReason, setRejectionReason] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [status] = useState(user?.doctorStatus);
 
     useEffect(() => {
-        async function fetchStatus() {
-            try {
-                const res = await api.get(API_ENDPOINTS.getOrUpdateMe);
-                const currentStatus = res.data.status ?? res.data.doctorStatus;
-                setStatus(currentStatus);
-                setRejectionReason(res.data.rejectionReason ?? null);
-
-                if (currentStatus === "ACTIVE") {
-                    navigate("/doctor-dashboard");
-                }
-            } catch (err) {
-                console.error("Failed to fetch doctor status", err);
-            } finally {
-                setLoading(false);
-            }
+        if (status === "ACTIVE") {
+            navigate("/doctor-dashboard");
         }
-        fetchStatus();
-    }, []);
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-page flex items-center justify-center">
-                <Loader2
-                    size={32}
-                    className="animate-spin"
-                    style={{ color: "#185FA5" }}
-                />
-            </div>
-        );
-    }
+    }, [status]);
 
     const handleLogout = () => {
         localStorage.removeItem("cliniq_user");

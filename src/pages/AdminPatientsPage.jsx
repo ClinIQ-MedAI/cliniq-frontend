@@ -7,39 +7,46 @@ import { Sun } from "lucide-react";
 import API_ENDPOINTS from "../apis/endpoints";
 
 export const AdminPatients = () => {
+    /** @type {[import("../types").PatientResponse,Function]} */
     const [patients, setPatients] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toggle, theme } = useTheme();
-    // 1. Fetch patients on mount
+    // Fetch patients on mount
     useEffect(() => {
         fetchPatients();
     }, []);
-
     const fetchPatients = async () => {
         setIsLoading(true);
         try {
+            /**@type {{data: import("../types").PatientResponse}} */
             const res = await api.get(
-                "http://localhost:5000/api/admin/patients?page=1",
+                API_ENDPOINTS.Admin.Patient.getOrCreatePatients,
             );
-            setPatients(res.data.items);
+
+            setPatients(res.data);
         } catch (error) {
             console.error("Failed to fetch patients", error);
         } finally {
             setIsLoading(false);
         }
+        return;
     };
-
-    // 2. Handle Suspend / Unlock
+    // Handle Suspend / Unlock
     const handleToggleStatus = async (patient) => {
         try {
             if (patient.isDisabled) {
                 // If disabled, unlock them
-                await api.put(API_ENDPOINTS.unlockPatient(patient.id));
+                await api.put(
+                    API_ENDPOINTS.Admin.Patient.unlockPatient(patient.id),
+                );
             } else {
                 // If active, suspend them (active: false)
-                await api.patch(API_ENDPOINTS.updatePatientStatus(patient.id), {
-                    active: false,
-                });
+                await api.patch(
+                    API_ENDPOINTS.Admin.Patient.updatePatientStatus(patient.id),
+                    {
+                        active: false,
+                    },
+                );
             }
             // Refresh the list to reflect changes
             fetchPatients();

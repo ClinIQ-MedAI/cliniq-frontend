@@ -17,24 +17,24 @@ import { BrowserRouter as Router } from "react-router-dom";
 //     </StrictMode>,
 // );
 
-async function enableMocking() {
-    if (import.meta.env.DEV) {
-        const { worker } = await import("./mocks/browser");
-        return worker.start({ onUnhandledRequest: "bypass" });
-    }
-}
+// async function enableMocking() {
+//     if (import.meta.env.DEV) {
+//         const { worker } = await import("./mocks/browser");
+//         return worker.start({ onUnhandledRequest: "bypass" });
+//     }
+// }
 
-enableMocking().then(() => {
-    createRoot(document.getElementById("root")).render(
-        <StrictMode>
-            <Router>
-                <UserProvider>
-                    <ThemeProvider>
-                        <App />
-                    </ThemeProvider>
-                    <Toaster />
-                </UserProvider>
-            </Router>
-        </StrictMode>,
-    );
-});
+// enableMocking().then(() => {
+createRoot(document.getElementById("root")).render(
+    <StrictMode>
+        <Router>
+            <UserProvider>
+                <ThemeProvider>
+                    <App />
+                </ThemeProvider>
+                <Toaster />
+            </UserProvider>
+        </Router>
+    </StrictMode>,
+);
+// });

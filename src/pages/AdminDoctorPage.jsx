@@ -120,6 +120,7 @@ const RejectModal = ({ doctor, onConfirm, onClose }) => {
 /* ── Main component ── */
 export const AdminDoctors = () => {
     const { toggle, theme } = useTheme();
+    /** @type {[import('../types.js').DoctorResponse[], Function]} */
     const [doctors, setDoctors] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchInput, setSearchInput] = useState("");
@@ -130,11 +131,13 @@ export const AdminDoctors = () => {
     useEffect(() => {
         fetchDoctors();
     }, []);
-
     async function fetchDoctors() {
         try {
-            const response = await api.get(API_ENDPOINTS.getOrCreateDoctor);
-            setDoctors(response.data.items);
+            /** @type {{ data: import("../types.js").DoctorResponse[] }} */
+            const response = await api.get(
+                API_ENDPOINTS.Admin.Doctor.getListOfDoctorsOrCreateDoctor,
+            );
+            setDoctors(response.data);
         } catch (error) {
             toast.error("Failed to load doctors.");
         } finally {
@@ -146,7 +149,7 @@ export const AdminDoctors = () => {
     const handleApprove = async (id) => {
         setLoadingId(id);
         try {
-            await api.post(API_ENDPOINTS.approveDoctor(id));
+            await api.post(API_ENDPOINTS.Admin.Doctor.approveDoctor(id));
             setDoctors((prev) =>
                 prev.map((d) => (d.id === id ? { ...d, status: "ACTIVE" } : d)),
             );
@@ -160,7 +163,9 @@ export const AdminDoctors = () => {
 
     const handleReject = async (id, reason) => {
         try {
-            await api.post(API_ENDPOINTS.rejectDoctor(id), { reason });
+            await api.post(API_ENDPOINTS.Admin.Doctor.rejectDoctor(id), {
+                reason,
+            });
             setDoctors((prev) =>
                 prev.map((d) =>
                     d.id === id ? { ...d, status: "REJECTED" } : d,
@@ -177,7 +182,9 @@ export const AdminDoctors = () => {
         setLoadingId(doctor.id);
         try {
             if (doctor.isDisabled) {
-                await api.put(API_ENDPOINTS.unlockDoctor(doctor.id));
+                await api.put(
+                    API_ENDPOINTS.Admin.Doctor.unlockDoctor(doctor.id),
+                );
                 setDoctors((prev) =>
                     prev.map((d) =>
                         d.id === doctor.id
@@ -187,9 +194,12 @@ export const AdminDoctors = () => {
                 );
                 toast.success("Doctor unlocked.");
             } else {
-                await api.patch(API_ENDPOINTS.updateDoctorStatus(doctor.id), {
-                    active: false,
-                });
+                await api.patch(
+                    API_ENDPOINTS.Admin.Doctor.updateDoctorStatus(doctor.id),
+                    {
+                        active: false,
+                    },
+                );
                 setDoctors((prev) =>
                     prev.map((d) =>
                         d.id === doctor.id

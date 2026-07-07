@@ -8,16 +8,19 @@ export const AdminDashboard = () => {
     const [pendingDoctors, setPendingDoctors] = useState([]);
     // Fetch pending doctors on load
     useEffect(() => {
-        api.get(API_ENDPOINTS.getOrCreateDoctor).then((res) => {
-            const pending = res.data.items.filter(
-                (d) => d.status === "PENDING_VERIFICATION",
-            );
-            setPendingDoctors(pending);
-        });
+        api.get(API_ENDPOINTS.Admin.Doctor.getListOfDoctorsOrCreateDoctor).then(
+            (res) => {
+                console.log(res);
+                const pending = res.data.filter(
+                    (d) => d.status === "PENDING_VERIFICATION",
+                );
+                setPendingDoctors(pending);
+            },
+        );
     }, []);
 
     const handleApprove = (id) => {
-        api.post(API_ENDPOINTS.approveDoctor(id)).then(() => {
+        api.post(API_ENDPOINTS.Admin.Doctor.approveDoctor(id)).then(() => {
             setPendingDoctors(pendingDoctors.filter((d) => d.id !== id));
         });
     };

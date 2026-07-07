@@ -91,7 +91,7 @@ const AppointmentsTable = () => {
     };
 
     return (
-        <div className="overflow-x-auto w-full max-w-[100%]">
+        <div className="overflow-x-auto w-full max-w-full">
             <table className="db-table">
                 <thead>
                     <tr>

@@ -1,175 +1,61 @@
 import { http, HttpResponse } from "msw";
 import { BASE_URL } from "../config";
-import { doctors } from "./admin";
 import { fakeDoctor } from "./auth";
-// Our fake database of appointments
-let allAppointments = [
-    {
-        id: 1,
-        name: "Shyam Khamo",
-        disease: "Heart Disease",
-        date: "Jan 27",
-        status: "pending",
-        visits: 3,
-    },
-    {
-        id: 2,
-        name: "Jean Lee Un",
-        disease: "Heart Disease",
-        date: "Jan 27",
-        status: "approved",
-        visits: 2,
-    },
-    {
-        id: 3,
-        name: "Clara Brook",
-        disease: "Heart Disease",
-        date: "Jan 27",
-        status: "pending",
-        visits: 5,
-    },
-    {
-        id: 4,
-        name: "Ahmed Ali",
-        disease: "Cardiovascular",
-        date: "Jan 28",
-        status: "approved",
-        visits: 7,
-    },
-    {
-        id: 5,
-        name: "Sarah Johnson",
-        disease: "Pediatric Cardiology",
-        date: "Jan 28",
-        status: "rejected",
-        visits: 1,
-    },
-    {
-        id: 6,
-        name: "Michael Brown",
-        disease: "Heart Disease",
-        date: "Jan 29",
-        status: "pending",
-        visits: 4,
-    },
-    {
-        id: 7,
-        name: "Emma Wilson",
-        disease: "Cardiac Surgery",
-        date: "Jan 29",
-        status: "approved",
-        visits: 6,
-    },
-    {
-        id: 8,
-        name: "David Lee",
-        disease: "Preventive Cardiology",
-        date: "Jan 30",
-        status: "pending",
-        visits: 2,
-    },
-    {
-        id: 9,
-        name: "Lisa Garcia",
-        disease: "Heart Disease",
-        date: "Jan 30",
-        status: "approved",
-        visits: 3,
-    },
-    {
-        id: 10,
-        name: "Robert Chen",
-        disease: "Pediatric Cardiology",
-        date: "Jan 31",
-        status: "pending",
-        visits: 4,
-    },
-];
-export let doctorProfile = {
-    id: "doctor-001",
-    firstName: "Ahmed",
-    lastName: "Hassan",
-    email: "doctor@cliniq.com",
-    dateOfBirth: "1990-05-15",
-    gender: "Male",
-    specialization: "Cardiology",
-    licenseNumber: "LIC-2024-001",
-    licenseExpiryDate: "2027-01-01",
-    personalIdentityPhotoUrl: "",
-    medicalLicenseUrl: "",
-    status: "INCOMPLETE_PROFILE", // changes after survey
-    isDisabled: false,
-};
+import { doctors } from "./admin";
+import { loadState, saveState } from "../storage";
 
 export const doctorHandlers = [
-    // GET /doctor/me
+    // Always derive from fakeDoctor — keeps id in sync, no separate stale object
     http.get(`${BASE_URL}/doctor/me`, () => {
-        // ✅ Fix: Just return the profile as-is. It will default to "INCOMPLETE_PROFILE",
-        // and then change to "PENDING_VERIFICATION" after the survey.
-        return HttpResponse.json(doctorProfile);
+        return HttpResponse.json({
+            id: fakeDoctor.id,
+            firstName: fakeDoctor.firstName,
+            lastName: fakeDoctor.lastName,
+            email: fakeDoctor.email,
+        });
     }),
 
-    // PUT /doctor/me
     http.put(`${BASE_URL}/doctor/me`, async ({ request }) => {
         const body = await request.json();
-        doctorProfile = { ...doctorProfile, ...body };
-        return HttpResponse.json(doctorProfile);
+        fakeDoctor.firstName = body.firstName;
+        fakeDoctor.lastName = body.lastName;
+        saveState("fakeDoctor", fakeDoctor);
+        return new HttpResponse(null, { status: 204 });
     }),
 
-    // PUT /doctor/me/change-password
     http.put(`${BASE_URL}/doctor/me/change-password`, async ({ request }) => {
         const body = await request.json();
         console.log("[MSW] Password changed:", body);
-        return HttpResponse.json({ message: "Password changed successfully." });
+        return new HttpResponse(null, { status: 204 });
     }),
 
-    // POST /doctor/survey
-    http.post(`${BASE_URL}/doctor/survey`, async ({ request }) => {
-        const body = await request.json();
+    http.post(`${BASE_URL}/doctor/Survey`, async () => {
+        fakeDoctor.doctorStatus = "PENDING_VERIFICATION";
+        saveState("fakeDoctor", fakeDoctor);
 
-        // 1. Update the logged-in doctor's profile
-        doctorProfile = {
-            ...doctorProfile,
-            specialization: body.specialization,
-            licenseNumber: body.licenseNumber,
-            licenseExpiryDate: body.licenseExpiryDate,
-            personalIdentityPhotoUrl: body.personalIdentityPhotoUrl,
-            medicalLicenseUrl: body.medicalLicenseUrl,
+        const existingIndex = doctors.findIndex((d) => d.id === fakeDoctor.id);
+        const adminFacingRecord = {
+            id: fakeDoctor.id,
+            firstName: fakeDoctor.firstName,
+            lastName: fakeDoctor.lastName,
+            email: fakeDoctor.email,
+            isDisabled: false,
             status: "PENDING_VERIFICATION",
         };
 
-        fakeDoctor.doctorStatus = "PENDING_VERIFICATION";
-
-        // 2. Add or update this doctor in the Admin's "doctors" array!
-        const existingIndex = doctors.findIndex(
-            (d) => d.id === doctorProfile.id,
-        );
-
         if (existingIndex >= 0) {
-            // Update existing doctor in the array
-            doctors[existingIndex] = {
-                ...doctors[existingIndex],
-                ...doctorProfile,
-            };
+            doctors[existingIndex] = adminFacingRecord;
         } else {
-            // Or add them to the array if they aren't there yet
-            doctors.push(doctorProfile);
+            doctors.push(adminFacingRecord);
         }
+        saveState("doctors", doctors);
 
-        return HttpResponse.json(
-            { message: "Survey submitted. Awaiting admin verification." },
-            { status: 201 },
-        );
+        return HttpResponse.json({
+            message: "Survey submitted. Awaiting admin verification.",
+        });
     }),
 
-    http.get(`${BASE_URL}/doctor/appointments/pending`, () => {
-        const pendingAppointments = allAppointments.filter(
-            (appointment) => appointment.status === "pending",
-        );
-        return HttpResponse.json(pendingAppointments);
-    }),
-
-    // Get Dashboard Metrics (Revenue, etc.)
+    // Dummy — no real backend endpoint yet
     http.get(`${BASE_URL}/doctor/metrics`, () => {
         return HttpResponse.json({
             patientsTreated: "3,247",
@@ -183,24 +69,4 @@ export const doctorHandlers = [
             },
         });
     }),
-    http.get(`${BASE_URL}/doctor/appointments`, () => {
-        return HttpResponse.json(allAppointments);
-    }),
-
-    // 2. Update Appointment Status
-    http.patch(
-        `${BASE_URL}/doctor/appointments/:id/status`,
-        async ({ request, params }) => {
-            const { id } = params;
-            const body = await request.json();
-
-            allAppointments = allAppointments.map((app) =>
-                app.id === Number(id) ? { ...app, status: body.status } : app,
-            );
-
-            return HttpResponse.json({
-                message: "Status updated successfully",
-            });
-        },
-    ),
 ];

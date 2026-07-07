@@ -27,7 +27,7 @@ export default function Profile({ onUpdateDoctorInfo }) {
     useEffect(() => {
         async function fetchProfile() {
             try {
-                const res = await api.get(API_ENDPOINTS.getOrUpdateMe);
+                const res = await api.get(API_ENDPOINTS.Doctor.getOrUpdateMe);
                 setProfile(res.data);
                 setEditForm(res.data);
             } catch (err) {
@@ -42,7 +42,10 @@ export default function Profile({ onUpdateDoctorInfo }) {
     const handleEditClick = () => setIsEditing(true);
     const handleSaveClick = async () => {
         try {
-            const res = await api.put(API_ENDPOINTS.getOrUpdateMe, editForm);
+            const res = await api.put(
+                API_ENDPOINTS.Doctor.getOrUpdateMe,
+                editForm,
+            );
             setProfile(res.data);
             setIsEditing(false);
             if (onUpdateDoctorInfo) {
