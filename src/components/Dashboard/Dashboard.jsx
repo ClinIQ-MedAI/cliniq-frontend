@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useUser } from "../../contexts/UserContext";
 import "./Dashboard.css";
 import { Users, Calendar, UserPlus, Clock, Loader2 } from "lucide-react";
@@ -104,16 +104,9 @@ const WeeklySchedule = ({ calendar, isLoading, error }) => {
 // NOTE: no backend endpoint exists yet for this (no /dashboard/metrics
 // in the OpenAPI spec). Keeping the fallback-only version until the
 // backend adds something like GET /api/doctor/dashboard/metrics.
-const PerformanceChart = () => {
+const PerformanceChart = ({ chartData }) => {
     const canvasRef = useRef(null);
     const chartRef = useRef(null);
-
-    const chartData = {
-        months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-        completed: [120, 135, 125, 145, 160, 150],
-        canceled: [15, 10, 12, 8, 5, 10],
-    };
-
     useEffect(() => {
         const isDark = window.matchMedia(
             "(prefers-color-scheme: dark)",
@@ -180,7 +173,7 @@ const PerformanceChart = () => {
                 chartRef.current = null;
             }
         };
-    }, []);
+    }, [chartData]);
 
     return (
         <div className="db-chart-block">
@@ -287,6 +280,26 @@ export default function Dashboard() {
     const [notificationsError, setNotificationsError] = useState("");
     const [recentBookings, setRecentBookings] = useState([]);
     const [isLoadingRecent, setIsLoadingRecent] = useState(true);
+    const [performanceData, setPerformanceData] = useState({
+        totalPatients: 0,
+        totalPatientsChangePercent: 0,
+        newPatientsThisMonth: 0,
+        newPatientsChangePercent: 0,
+        monthlyPerformance: [],
+    });
+
+    const chartData = useMemo(
+        () => transformChartData(performanceData.monthlyPerformance),
+        [performanceData.monthlyPerformance],
+    );
+
+    function transformChartData(rawData) {
+        return {
+            months: rawData?.map((d) => d.month),
+            completed: rawData?.map((d) => d.completed),
+            canceled: rawData?.map((d) => d.canceled),
+        };
+    }
 
     useEffect(() => {
         const t = setInterval(() => setTime(new Date()), 1000);
@@ -320,6 +333,17 @@ export default function Dashboard() {
             }
         }
         fetchWeeklySchedule();
+    }, []);
+
+    useEffect(() => {
+        async function fetchPerformace() {
+            const response = await api.get(
+                API_ENDPOINTS.Doctor.getPerformanceData,
+            );
+
+            setPerformanceData(response.data);
+        }
+        fetchPerformace();
     }, []);
 
     // Smart Alerts: now hits GET /api/notifications
@@ -403,8 +427,8 @@ export default function Dashboard() {
                 <MetricCard
                     Icon={Users}
                     label="Total Patients"
-                    value="1,247"
-                    sub="↑ 8% vs last month"
+                    value={performanceData.totalPatients}
+                    sub={performanceData.totalPatientsChangePercent + "%"}
                     subUp={true}
                 />
                 <MetricCard
@@ -415,8 +439,8 @@ export default function Dashboard() {
                 <MetricCard
                     Icon={UserPlus}
                     label="New Patients This Month"
-                    value="84"
-                    sub="↑ 15% vs last month"
+                    value={performanceData.newPatientsThisMonth}
+                    sub={performanceData.newPatientsChangePercent + "%"}
                     subUp={true}
                 />
                 <MetricCard
@@ -445,7 +469,7 @@ export default function Dashboard() {
                         <div className="db-card-title">
                             Appointments Performance (6 Months)
                         </div>
-                        <PerformanceChart />
+                        <PerformanceChart chartData={chartData} />
                     </div>
                 </div>
 
@@ -466,9 +490,6 @@ export default function Dashboard() {
                                         {p.patientName}
                                     </div>
                                     <div className="db-cl-cond">{p.date}</div>
-                                </div>
-                                <div className="db-cl-visits text-t3 text-xs">
-                                    Last visit: Today
                                 </div>
                             </div>
                         ))}

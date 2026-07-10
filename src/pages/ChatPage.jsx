@@ -42,12 +42,15 @@ function normalizeRestMessage(raw) {
 // include a `status` field — treat freshly pushed messages as DELIVERED.
 function normalizeSocketMessage(raw) {
     return {
-        id: raw.messageId,
-        conversationId: raw.conversationId,
-        senderId: raw.senderId,
-        senderType: SENDER_TYPE_MAP[raw.senderType] ?? raw.senderType,
-        content: raw.content,
-        createdAt: raw.createdAt,
+        id: raw.messageId ?? raw.MessageId ?? raw.id ?? raw.Id,
+        conversationId: raw.conversationId ?? raw.ConversationId,
+        senderId: raw.senderId ?? raw.SenderId,
+        senderType:
+            SENDER_TYPE_MAP[raw.senderType ?? raw.SenderType] ??
+            raw.senderType ??
+            raw.SenderType,
+        content: raw.content ?? raw.Content,
+        createdAt: raw.createdAt ?? raw.CreatedAt,
         status: "DELIVERED",
     };
 }
@@ -269,29 +272,38 @@ export default function ChatPage() {
         const unsubscribe = chatSocketService.onMessage((payload) => {
             const message = normalizeSocketMessage(payload);
 
-            if (message.conversationId === selectedIdRef.current) {
-                // Message for the conversation currently open — append locally,
-                // then silently re-fetch so the READ side effect fires.
+            const currentChatId = String(selectedIdRef.current);
+            const incomingChatId = String(message.conversationId);
+
+            console.log("📦 RAW payload:", payload);
+            console.log("🔍 normalized message:", message);
+            console.log(
+                "🔍 currentChatId:",
+                currentChatId,
+                "| incomingChatId:",
+                incomingChatId,
+                "| match:",
+                incomingChatId === currentChatId,
+            );
+
+            if (incomingChatId === currentChatId) {
                 setMessages((prev) =>
-                    prev.some((m) => m.id === message.id)
+                    prev.some((m) => String(m.id) === String(message.id))
                         ? prev
                         : [...prev, message],
                 );
                 fetchMessages(message.conversationId, true);
             } else {
-                // Message for a conversation not currently open — bump its
-                // preview/unread count. If it's a brand-new conversation we
-                // haven't seen yet, just resync the whole list.
                 setConversations((prev) => {
                     const exists = prev.some(
-                        (c) => c.id === message.conversationId,
+                        (c) => String(c.id) === incomingChatId,
                     );
                     if (!exists) {
                         fetchConversations(true);
                         return prev;
                     }
                     return prev.map((c) =>
-                        c.id === message.conversationId
+                        String(c.id) === incomingChatId
                             ? {
                                   ...c,
                                   lastMessageAt: message.createdAt,

@@ -22,11 +22,9 @@ const NAV_MAIN = [
         icon: "ti-message-circle",
         label: "Messages",
     },
-    { to: "/tables", icon: "ti-table", label: "Tables" },
 ];
 
 const NAV_CONTENT = [
-    { to: "/articles", icon: "ti-article", label: "Articles" },
     { to: "/settings", icon: "ti-clock", label: "Availability" },
     { to: "/profile", icon: "ti-user-circle", label: "Profile" },
 ];

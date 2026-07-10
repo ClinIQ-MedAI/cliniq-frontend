@@ -4,7 +4,6 @@ import { useUser } from "../../contexts/UserContext";
 export const AuthorizationRoleGuard = ({ allowed }) => {
     const { user } = useUser();
     const location = useLocation();
-    debugger;
     if (!user || (user.roles.length > 0 && !allowed.includes(user.roles[0]))) {
         return <Navigate to="/" replace state={{ from: location }} />;
     }

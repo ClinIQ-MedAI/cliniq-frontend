@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Search, Frown } from "lucide-react";
 import API_ENDPOINTS from "../../apis/endpoints";
 import api from "../../apis/api";
+import { useNavigate } from "react-router-dom";
 const ini = (name = "") =>
     name
         .split(" ")
@@ -79,7 +80,7 @@ export default function AppointmentsPage() {
     const [page, setPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState("");
-
+    const navigate = useNavigate();
     useEffect(() => {
         async function getMyBookings() {
             try {
@@ -292,30 +293,38 @@ export default function AppointmentsPage() {
                                         <StatusPill status={a.status} />
                                     </td>
                                     <td className="px-3.5 py-2.5">
-                                        {a.status === "PENDING" ? (
-                                            <div className="flex items-center gap-1.5">
-                                                <button
-                                                    onClick={() =>
-                                                        handleAccept(a.id)
-                                                    }
-                                                    className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#E1F5EE] text-[#0F6E56] hover:bg-[#CFEEE3] transition-colors cursor-pointer"
-                                                >
-                                                    Accept
-                                                </button>
-                                                <button
-                                                    onClick={() =>
-                                                        handleReject(a.id)
-                                                    }
-                                                    className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#FCEBEB] text-[#A32D2D] hover:bg-[#F9D9D9] transition-colors cursor-pointer"
-                                                >
-                                                    Reject
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <span className="text-t3 text-xs">
-                                                —
-                                            </span>
-                                        )}
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                onClick={() =>
+                                                    navigate(
+                                                        `/patients/${a.patientId}/documents`,
+                                                    )
+                                                }
+                                                className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#EEF3FB] text-[#185FA5] hover:bg-[#DCE9F7] transition-colors cursor-pointer"
+                                            >
+                                                Documents
+                                            </button>
+                                            {a.status === "PENDING" && (
+                                                <>
+                                                    <button
+                                                        onClick={() =>
+                                                            handleAccept(a.id)
+                                                        }
+                                                        className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#E1F5EE] text-[#0F6E56] hover:bg-[#CFEEE3] transition-colors cursor-pointer"
+                                                    >
+                                                        Accept
+                                                    </button>
+                                                    <button
+                                                        onClick={() =>
+                                                            handleReject(a.id)
+                                                        }
+                                                        className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#FCEBEB] text-[#A32D2D] hover:bg-[#F9D9D9] transition-colors cursor-pointer"
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

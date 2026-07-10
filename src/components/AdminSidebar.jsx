@@ -4,6 +4,7 @@ import {
     ActivityIcon,
     LogOut,
     LayoutDashboard,
+    MessageCircle,
 } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useUser } from "../contexts/UserContext";
@@ -43,6 +44,9 @@ export const AdminSidebar = () => {
 
                     <NavLink to="/admin/bookings" className={navLinkClasses}>
                         <Calendar size={20} /> Bookings
+                    </NavLink>
+                    <NavLink to="/admin/contact-us" className={navLinkClasses}>
+                        <MessageCircle size={20} /> Contact Us
                     </NavLink>
                 </nav>
 

@@ -48,7 +48,6 @@ export const AdminDashboard = () => {
             try {
                 setIsLoadingStats(true);
                 setStatsError("");
-                debugger;
                 const [doctorsRes, patientsRes, messagesRes] =
                     await Promise.all([
                         api.get(
@@ -58,7 +57,7 @@ export const AdminDashboard = () => {
                         api.get(
                             API_ENDPOINTS.Admin.Patient.getOrCreatePatients,
                         ),
-                        api.get(API_ENDPOINTS.Admin.Contact.getAll),
+                        api.get(API_ENDPOINTS.Admin.Contact.getAllMessages),
                     ]);
 
                 const doctors = doctorsRes.data ?? [];

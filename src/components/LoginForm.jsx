@@ -25,7 +25,6 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
         try {
             //TODO: Edit Logic When Finish
             data.otpCode = null;
-            debugger;
             const response = await api.post(API_ENDPOINTS.Auth.login, data);
             const user = response.data;
             console.log(user);

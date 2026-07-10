@@ -18,6 +18,16 @@ const API_ENDPOINTS = {
         determineDoctorAvailability: "/doctor/schedules/availability",
         generateSchedule: "/doctor/schedules/generate",
         getAllSchedules: "/doctor/schedules",
+        getPerformanceData: `/doctor/performance`,
+        Scans: {
+            review: (scanId) => `/Scans/${scanId}/review`,
+            getByPatient: (patientId) => `/Scans/patient/${patientId}`,
+        },
+        Prescriptions: {
+            confirm: (prescriptionId) =>
+                `/Prescriptions/${prescriptionId}/confirm`,
+            getByPatient: (patientId) => `/Prescriptions/patient/${patientId}`,
+        },
     },
     Admin: {
         Booking: { getAllBookings: "/admin/bookings" },
@@ -54,7 +64,8 @@ const API_ENDPOINTS = {
             unlockPatient: (patientId) => `/admin/Patients/${patientId}/unlock`,
         },
         Contact: {
-            getAll: `/admin/contact-us`,
+            getAllMessages: "/admin/contact-us",
+            markAsRead: (messageId) => `/admin/contact-us/${messageId}/read`,
         },
     },
     Bookings: {

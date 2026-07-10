@@ -22,6 +22,8 @@ import { ConversationsPage } from "./pages/ConversationsPage";
 import ChatPage from "./pages/ChatPage";
 import AvailabilityPage from "./pages/AvailabilityPage";
 import { AdminBookings } from "./pages/AdminBookingPage";
+import { AdminContactUs } from "./pages/AdminContactUs";
+import PatientDocuments from "./pages/PatientDocumentsPage";
 
 function Patients() {
     return (
@@ -103,6 +105,10 @@ function App() {
                                 path="/admin/bookings"
                                 element={<AdminBookings />}
                             />
+                            <Route
+                                path="/admin/contact-us"
+                                element={<AdminContactUs />}
+                            />
                         </Route>
                     </Route>
                 </Route>
@@ -127,6 +133,10 @@ function App() {
                                 element={<AppointmentsPage />}
                             />
                             <Route path="/patients" element={<Patients />} />
+                            <Route
+                                path="/patients/:patientId/documents"
+                                element={<PatientDocuments />}
+                            />
                             <Route
                                 path="/announcements"
                                 element={<Announcements />}

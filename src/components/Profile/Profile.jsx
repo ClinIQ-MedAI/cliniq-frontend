@@ -326,38 +326,6 @@ export default function Profile({ onUpdateDoctorInfo }) {
                                     onChange={handleInputChange}
                                     type="date"
                                 />
-                                <div className="sm:col-span-2">
-                                    <p className="text-xs font-semibold uppercase tracking-widest text-t3 mb-2">
-                                        Gender
-                                    </p>
-                                    {isEditing ? (
-                                        <div className="flex gap-3">
-                                            {["Male", "Female"].map((g) => (
-                                                <button
-                                                    key={g}
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setEditForm((prev) => ({
-                                                            ...prev,
-                                                            gender: g,
-                                                        }))
-                                                    }
-                                                    className={`px-5 py-2 rounded-xl text-sm font-medium border-2 transition-colors ${
-                                                        editForm.gender === g
-                                                            ? "border-[#185FA5] bg-blue-50 text-[#185FA5]"
-                                                            : "border-border text-t2 bg-card"
-                                                    }`}
-                                                >
-                                                    {g}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <span className="text-sm font-medium text-t1 px-4 py-2 rounded-xl bg-subtle border border-border inline-block">
-                                            {profile.gender ?? "—"}
-                                        </span>
-                                    )}
-                                </div>
                             </div>
                         </Section>
 
