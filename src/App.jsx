@@ -20,6 +20,8 @@ import { AuthorizationRoleGuard } from "./components/guards/AuthorizationRoleGua
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ConversationsPage } from "./pages/ConversationsPage";
 import ChatPage from "./pages/ChatPage";
+import AvailabilityPage from "./pages/AvailabilityPage";
+import { AdminBookings } from "./pages/AdminBookingPage";
 
 function Patients() {
     return (
@@ -97,6 +99,10 @@ function App() {
                                 path="/admin/doctors"
                                 element={<AdminDoctors />}
                             />
+                            <Route
+                                path="/admin/bookings"
+                                element={<AdminBookings />}
+                            />
                         </Route>
                     </Route>
                 </Route>
@@ -125,7 +131,10 @@ function App() {
                                 path="/announcements"
                                 element={<Announcements />}
                             />
-                            <Route path="/settings" element={<Settings />} />
+                            <Route
+                                path="/settings"
+                                element={<AvailabilityPage />}
+                            />
                             <Route path="/profile" element={<Profile />} />
                             <Route
                                 path="/conversations"

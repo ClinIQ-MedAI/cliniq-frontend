@@ -14,11 +14,10 @@ export function UserProvider({ children }) {
 
     //TODO:Edit Login Logic when api finishes
     function loginData(user, token, email) {
-        if (email === import.meta.env.VITE_ADMIN_ACCOUNT) {
+        if (user.roles.length > 0 && user.roles[0] === "Admin") {
             user.role = "Admin";
-        } else {
-            user.role = "Doctor";
         }
+
         localStorage.setItem("cliniq_user", JSON.stringify(user));
         localStorage.setItem("cliniq_token", token);
         setUser(user);

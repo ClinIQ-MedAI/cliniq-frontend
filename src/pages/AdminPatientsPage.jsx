@@ -34,10 +34,11 @@ export const AdminPatients = () => {
     // Handle Suspend / Unlock
     const handleToggleStatus = async (patient) => {
         try {
-            if (patient.isDisabled) {
+            if (patient.status === "SUSPENDED") {
                 // If disabled, unlock them
-                await api.put(
-                    API_ENDPOINTS.Admin.Patient.unlockPatient(patient.id),
+                await api.patch(
+                    API_ENDPOINTS.Admin.Patient.updatePatientStatus(patient.id),
+                    { active: true },
                 );
             } else {
                 // If active, suspend them (active: false)
@@ -138,12 +139,12 @@ export const AdminPatients = () => {
                                     <td className="p-4">
                                         <span
                                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                patient.isDisabled
+                                                patient.status === "SUSPENDED"
                                                     ? "bg-red-500/10 text-red-600 dark:text-red-400"
                                                     : "bg-green-500/10 text-green-600 dark:text-green-400"
                                             }`}
                                         >
-                                            {patient.isDisabled
+                                            {patient.status === "SUSPENDED"
                                                 ? "Suspended"
                                                 : "Active"}
                                         </span>
@@ -154,12 +155,12 @@ export const AdminPatients = () => {
                                                 handleToggleStatus(patient)
                                             }
                                             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors ${
-                                                patient.isDisabled
+                                                patient.status === "SUSPENDED"
                                                     ? "bg-primary/10 text-primary hover:bg-primary/20"
                                                     : "bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20"
                                             }`}
                                         >
-                                            {patient.isDisabled ? (
+                                            {patient.status === "SUSPENDED" ? (
                                                 <>
                                                     <Unlock size={16} /> Unlock
                                                 </>

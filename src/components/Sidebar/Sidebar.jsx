@@ -27,6 +27,7 @@ const NAV_MAIN = [
 
 const NAV_CONTENT = [
     { to: "/articles", icon: "ti-article", label: "Articles" },
+    { to: "/settings", icon: "ti-clock", label: "Availability" },
     { to: "/profile", icon: "ti-user-circle", label: "Profile" },
 ];
 
@@ -60,7 +61,7 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
 
     return (
         <aside
-            className={`sb fixed z-10 ${isSidebarOpen ? "translate-x-0" : "-translate-x-[100%]"} transition-all  md:translate-x-0 md:sticky left-0 top-0 `}
+            className={`sb fixed z-10 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} transition-all  md:translate-x-0 md:sticky left-0 top-0 `}
             aria-label="Main navigation "
         >
             {/* Logo */}
@@ -106,11 +107,13 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
             <div className="sb-footer">
                 <div className="sb-user">
                     <div className="sb-av">
-                        {initials(user?.firstName + " " + user?.lastName)}
+                        {initials(
+                            user?.user?.firstName + " " + user?.user?.lastName,
+                        )}
                     </div>
-                    <div className="sb-user-info">
+                    <div className="sb-user-info ">
                         <div className="sb-user-name">
-                            {user?.firstName} {user?.lastName ?? ""}
+                            {user?.user?.firstName} {user?.user?.lastName ?? ""}
                         </div>
                         <div className="sb-user-role">Cardiologist</div>
                     </div>

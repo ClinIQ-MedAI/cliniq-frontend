@@ -4,16 +4,21 @@ import { useUser } from "../../contexts/UserContext";
 export const AuthorizationRoleGuard = ({ allowed }) => {
     const { user } = useUser();
     const location = useLocation();
-
-    if (!user || !allowed.includes(user.role)) {
+    debugger;
+    if (!user || (user.roles.length > 0 && !allowed.includes(user.roles[0]))) {
         return <Navigate to="/" replace state={{ from: location }} />;
     }
 
-    if (user.role === "Admin" && !location.pathname.startsWith("/admin")) {
+    if (
+        user.roles &&
+        user.roles.length > 0 &&
+        user.roles[0] === "Admin" &&
+        !location.pathname.startsWith("/admin")
+    ) {
         return <Navigate to="/admin/dashboard" replace />;
     }
 
-    if (user.role === "Doctor") {
+    if (user.doctor && user.doctor.status) {
         const needsSurvey = [
             "INCOMPLETE_PROFILE",
             "PENDING_VERIFICATION",
@@ -21,7 +26,7 @@ export const AuthorizationRoleGuard = ({ allowed }) => {
         ];
 
         if (
-            needsSurvey.includes(user.doctorStatus) &&
+            needsSurvey.includes(user.doctor.status) &&
             location.pathname !== "/survey"
         ) {
             return <Navigate to="/survey" replace />;

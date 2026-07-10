@@ -1,120 +1,161 @@
 import { useState, useEffect } from "react";
-import { UserPlus, Check, X, Moon, Sun } from "lucide-react";
+import { Users, ActivityIcon, UserPlus, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
 import api from "../apis/api";
 import { AdminDashboardHeader } from "../components/AdminDashboardHeader";
 import API_ENDPOINTS from "../apis/endpoints";
 
-export const AdminDashboard = () => {
-    const [pendingDoctors, setPendingDoctors] = useState([]);
-    // Fetch pending doctors on load
-    useEffect(() => {
-        api.get(API_ENDPOINTS.Admin.Doctor.getListOfDoctorsOrCreateDoctor).then(
-            (res) => {
-                console.log(res);
-                const pending = res.data.filter(
-                    (d) => d.status === "PENDING_VERIFICATION",
-                );
-                setPendingDoctors(pending);
-            },
-        );
-    }, []);
+/* ─── skeleton for a single stat card ────────────────────────── */
+const StatCardSkeleton = () => (
+    <div className="bg-card/150 p-6 rounded-xl border border-border shadow-sm animate-pulse">
+        <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-subtle" />
+            <div className="flex-1 space-y-2">
+                <div className="h-3 w-24 rounded bg-subtle" />
+                <div className="h-6 w-12 rounded bg-subtle" />
+            </div>
+        </div>
+    </div>
+);
 
-    const handleApprove = (id) => {
-        api.post(API_ENDPOINTS.Admin.Doctor.approveDoctor(id)).then(() => {
-            setPendingDoctors(pendingDoctors.filter((d) => d.id !== id));
-        });
-    };
+/* ─── real stat card ──────────────────────────────────────────── */
+const StatCard = ({ Icon, label, value }) => (
+    <div className="bg-card p-6 rounded-xl border border-border shadow-sm transition-colors duration-300">
+        <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary/10 text-primary rounded-lg">
+                <Icon size={24} />
+            </div>
+            <div>
+                <p className="text-sm text-t2 font-medium">{label}</p>
+                <p className="text-2xl font-bold text-t1">{value}</p>
+            </div>
+        </div>
+    </div>
+);
+
+export const AdminDashboard = () => {
+    const [stats, setStats] = useState({
+        totalDoctors: 0,
+        totalPatients: 0,
+        pendingDoctors: 0,
+        unreadMessages: 0,
+    });
+    const [isLoadingStats, setIsLoadingStats] = useState(true);
+    const [statsError, setStatsError] = useState("");
+
+    useEffect(() => {
+        async function fetchDashboardStats() {
+            try {
+                setIsLoadingStats(true);
+                setStatsError("");
+                debugger;
+                const [doctorsRes, patientsRes, messagesRes] =
+                    await Promise.all([
+                        api.get(
+                            API_ENDPOINTS.Admin.Doctor
+                                .getListOfDoctorsOrCreateDoctor,
+                        ),
+                        api.get(
+                            API_ENDPOINTS.Admin.Patient.getOrCreatePatients,
+                        ),
+                        api.get(API_ENDPOINTS.Admin.Contact.getAll),
+                    ]);
+
+                const doctors = doctorsRes.data ?? [];
+                const patients = patientsRes.data ?? [];
+                // Response shape: { items: [...], totalCount }
+                const messages = messagesRes.data?.items ?? [];
+                setStats({
+                    totalDoctors: doctors.length,
+                    totalPatients: patients.length,
+                    pendingDoctors: doctors.filter(
+                        (d) => d.status === "PENDING_VERIFICATION",
+                    ).length,
+                    unreadMessages: messages.filter((m) => !m.isRead).length,
+                });
+            } catch (err) {
+                setStatsError("Failed to load dashboard stats.");
+            } finally {
+                setIsLoadingStats(false);
+            }
+        }
+        fetchDashboardStats();
+    }, []);
 
     return (
         <div className="flex w-full bg-page font-sans transition-colors duration-300">
-            {/* --- MAIN CONTENT --- */}
             <main className="flex-1 p-8 overflow-y-auto">
-                {/* Header */}
                 <AdminDashboardHeader />
+
+                {statsError && (
+                    <div className="mb-6 text-sm text-red-600">
+                        {statsError}
+                    </div>
+                )}
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-card p-6 rounded-xl border border-border shadow-sm transition-colors duration-300">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-primary/10 text-primary rounded-lg">
-                                <UserPlus size={24} />
-                            </div>
-                            <div>
-                                <p className="text-sm text-t2 font-medium">
-                                    Pending Approvals
-                                </p>
-                                <p className="text-2xl font-bold text-t1">
-                                    {pendingDoctors.length}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    {isLoadingStats ? (
+                        <>
+                            <StatCardSkeleton />
+                            <StatCardSkeleton />
+                            <StatCardSkeleton />
+                            <StatCardSkeleton />
+                        </>
+                    ) : (
+                        <>
+                            <StatCard
+                                Icon={ActivityIcon}
+                                label="Total Doctors"
+                                value={stats.totalDoctors}
+                            />
+                            <StatCard
+                                Icon={Users}
+                                label="Total Patients"
+                                value={stats.totalPatients}
+                            />
+                            <StatCard
+                                Icon={UserPlus}
+                                label="Pending Approvals"
+                                value={stats.pendingDoctors}
+                            />
+                            <StatCard
+                                Icon={Mail}
+                                label="Unread Messages"
+                                value={stats.unreadMessages}
+                            />
+                        </>
+                    )}
                 </div>
 
-                {/* Pending Doctors Table */}
-                <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden transition-colors duration-300">
-                    <div className="p-6 border-b border-border">
-                        <h3 className="text-xl font-bold text-t1">
-                            Action Required: Doctor Verifications
-                        </h3>
+                {/* Action Required CTA */}
+                {isLoadingStats ? (
+                    <div className="bg-card p-6 rounded-xl border border-border shadow-sm animate-pulse">
+                        <div className="h-4 w-48 rounded bg-subtle mb-2" />
+                        <div className="h-3 w-64 rounded bg-subtle" />
                     </div>
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-subtle text-t2 text-sm border-b border-border">
-                                <th className="p-4 font-medium">Name</th>
-                                <th className="p-4 font-medium">
-                                    Specialization
-                                </th>
-                                <th className="p-4 font-medium">License #</th>
-                                <th className="p-4 font-medium text-right">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {pendingDoctors.length === 0 ? (
-                                <tr>
-                                    <td
-                                        colSpan="4"
-                                        className="p-4 text-center text-t3 py-8"
-                                    >
-                                        No pending approvals at the moment.
-                                    </td>
-                                </tr>
-                            ) : (
-                                pendingDoctors.map((doc) => (
-                                    <tr
-                                        key={doc.id}
-                                        className="border-b border-border-sub hover:bg-subtle transition-colors"
-                                    >
-                                        <td className="p-4 font-medium text-t1">
-                                            Dr. {doc.firstName} {doc.lastName}
-                                        </td>
-                                        <td className="p-4 text-t2">
-                                            {doc.specialization}
-                                        </td>
-                                        <td className="p-4 text-t2 font-mono text-sm">
-                                            {doc.licenseNumber}
-                                        </td>
-                                        <td className="p-4 flex justify-end gap-2">
-                                            <button
-                                                onClick={() =>
-                                                    handleApprove(doc.id)
-                                                }
-                                                className="flex items-center gap-1 bg-green-500/10 text-green-600 dark:text-green-400 px-3 py-1.5 rounded-lg hover:bg-green-500/20 transition"
-                                            >
-                                                <Check size={16} /> Approve
-                                            </button>
-                                            <button className="flex items-center gap-1 bg-red-500/10 text-red-600 dark:text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500/20 transition">
-                                                <X size={16} /> Reject
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                ) : (
+                    <Link
+                        to="/admin/doctors"
+                        className="flex items-center justify-between p-6 bg-card rounded-xl border border-border shadow-sm hover:bg-subtle transition-colors"
+                    >
+                        <div>
+                            <h3 className="font-bold text-t1">
+                                Action Required: Doctor Verifications
+                            </h3>
+                            <p className="text-sm text-t2 mt-1">
+                                {stats.pendingDoctors === 0
+                                    ? "No pending approvals at the moment."
+                                    : `${stats.pendingDoctors} doctor${
+                                          stats.pendingDoctors !== 1 ? "s" : ""
+                                      } waiting for approval`}
+                            </p>
+                        </div>
+                        <span className="text-primary text-sm font-medium whitespace-nowrap">
+                            Review →
+                        </span>
+                    </Link>
+                )}
             </main>
         </div>
     );

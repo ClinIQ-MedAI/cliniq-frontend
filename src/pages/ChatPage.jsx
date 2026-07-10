@@ -14,156 +14,43 @@ import {
     CheckCheck,
     Loader2,
 } from "lucide-react";
+import api from "../apis/api";
+import API_ENDPOINTS from "../apis/endpoints";
+import chatSocketService from "../apis/ChatSocket";
 
-const CONVERSATIONS_POLL_MS = 15000;
-const MESSAGES_POLL_MS = 4000;
-const NETWORK_DELAY_MS = 500;
+// Kept as a periodic fallback sync for the conversation list (unread counts /
+// ordering) in case a socket event is ever missed. Real-time updates for an
+// open conversation now come from the socket, not from polling messages.
+const CONVERSATIONS_POLL_MS = 30000;
 
-/* ─── mock data ────────────────────────────────────────────── */
-const MOCK_CONVERSATIONS = [
-    {
-        id: "c1",
-        patientName: "Amelia Hart",
-        lastMessageAt: new Date(Date.now() - 1000 * 60 * 6).toISOString(),
-        unreadCount: 2,
-    },
-    {
-        id: "c2",
-        patientName: "Daniel Osei",
-        lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-        unreadCount: 0,
-    },
-    {
-        id: "c3",
-        patientName: "Priya Nair",
-        lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
-        unreadCount: 1,
-    },
-    {
-        id: "c4",
-        patientName: "Marcus Webb",
-        lastMessageAt: new Date(
-            Date.now() - 1000 * 60 * 60 * 24 * 4,
-        ).toISOString(),
-        unreadCount: 0,
-    },
-    {
-        id: "c5",
-        patientName: "Sofia Ramirez",
-        lastMessageAt: null,
-        unreadCount: 0,
-    },
-];
+/* ─── enum maps (see "Common Enums" in socket_documentation.md) ───────── */
+const SENDER_TYPE_MAP = { 0: "DOCTOR", 1: "PATIENT" };
+const STATUS_MAP = { 0: "SENT", 1: "DELIVERED", 2: "READ" };
 
-const MOCK_MESSAGES = {
-    c1: [
-        {
-            id: "m1",
-            senderType: "PATIENT",
-            content: "Hi Doctor, the new dosage seems to be helping.",
-            createdAt: new Date(Date.now() - 1000 * 60 * 40).toISOString(),
-            status: "READ",
-        },
-        {
-            id: "m2",
-            senderType: "DOCTOR",
-            content: "That's great to hear. Any side effects so far?",
-            createdAt: new Date(Date.now() - 1000 * 60 * 35).toISOString(),
-            status: "READ",
-        },
-        {
-            id: "m3",
-            senderType: "PATIENT",
-            content: "A little drowsiness in the morning, nothing major.",
-            createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
-            status: "READ",
-        },
-        {
-            id: "m4",
-            senderType: "PATIENT",
-            content: "Should I keep taking it at the same time?",
-            createdAt: new Date(Date.now() - 1000 * 60 * 6).toISOString(),
-            status: "DELIVERED",
-        },
-    ],
-    c2: [
-        {
-            id: "m5",
-            senderType: "DOCTOR",
-            content: "Your labs came back normal. Nothing to worry about.",
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-            status: "READ",
-        },
-    ],
-    c3: [
-        {
-            id: "m6",
-            senderType: "PATIENT",
-            content: "Can we move Thursday's appointment to Friday?",
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
-            status: "DELIVERED",
-        },
-    ],
-    c4: [
-        {
-            id: "m7",
-            senderType: "DOCTOR",
-            content: "Please remember to fast before the blood test.",
-            createdAt: new Date(
-                Date.now() - 1000 * 60 * 60 * 24 * 4,
-            ).toISOString(),
-            status: "READ",
-        },
-    ],
-    c5: [],
-};
+// REST message responses already have shape { id, senderType, status, ... }.
+// senderType/status may arrive as numeric enum indices or as strings
+// depending on the backend's JSON serialization config — normalize both.
+function normalizeRestMessage(raw) {
+    return {
+        ...raw,
+        senderType: SENDER_TYPE_MAP[raw.senderType] ?? raw.senderType,
+        status: STATUS_MAP[raw.status] ?? raw.status,
+    };
+}
 
-/* mutable in-memory store so sends/reads persist while the page is open */
-let conversationsStore = MOCK_CONVERSATIONS.map((c) => ({ ...c }));
-let messagesStore = Object.fromEntries(
-    Object.entries(MOCK_MESSAGES).map(([k, v]) => [
-        k,
-        v.map((m) => ({ ...m })),
-    ]),
-);
-let idCounter = 1000;
-
-const mockFetchConversations = () =>
-    new Promise((resolve) => {
-        setTimeout(() => {
-            resolve([...conversationsStore]);
-        }, NETWORK_DELAY_MS);
-    });
-
-const mockFetchMessages = (conversationId) =>
-    new Promise((resolve) => {
-        setTimeout(() => {
-            resolve([...(messagesStore[conversationId] ?? [])]);
-        }, NETWORK_DELAY_MS);
-    });
-
-const mockSendMessage = (conversationId, content) =>
-    new Promise((resolve) => {
-        setTimeout(() => {
-            const message = {
-                id: `m${idCounter++}`,
-                senderType: "DOCTOR",
-                content,
-                createdAt: new Date().toISOString(),
-                status: "DELIVERED",
-            };
-            messagesStore[conversationId] = [
-                ...(messagesStore[conversationId] ?? []),
-                message,
-            ];
-            conversationsStore = conversationsStore.map((c) =>
-                c.id === conversationId
-                    ? { ...c, lastMessageAt: message.createdAt }
-                    : c,
-            );
-            resolve(message);
-        }, NETWORK_DELAY_MS);
-    });
+// ReceiveMessage socket payloads use `messageId` instead of `id` and don't
+// include a `status` field — treat freshly pushed messages as DELIVERED.
+function normalizeSocketMessage(raw) {
+    return {
+        id: raw.messageId,
+        conversationId: raw.conversationId,
+        senderId: raw.senderId,
+        senderType: SENDER_TYPE_MAP[raw.senderType] ?? raw.senderType,
+        content: raw.content,
+        createdAt: raw.createdAt,
+        status: "DELIVERED",
+    };
+}
 
 /* ─── helpers ──────────────────────────────────────────────── */
 const ini = (name = "") =>
@@ -237,7 +124,7 @@ const ConversationItem = ({ conversation, isActive, onClick }) => (
                         : "No messages yet"}
                 </span>
                 {conversation.unreadCount > 0 && (
-                    <span className="shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-white text-xs font-semibold flex items-center justify-center">
+                    <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-primary text-white text-xs font-semibold flex items-center justify-center">
                         {conversation.unreadCount}
                     </span>
                 )}
@@ -318,13 +205,13 @@ export default function ChatPage() {
         );
     }, [conversations, search]);
 
-    /* fetch conversations (mock) */
+    /* --- REST: conversation list --- */
     const fetchConversations = useCallback(async (silent = false) => {
         try {
             if (!silent) setLoadingConversations(true);
-            const data = await mockFetchConversations();
+            const { data } = await api.get(API_ENDPOINTS.Chat.getConversations);
             setConversations(
-                [...data].sort(
+                [...(data ?? [])].sort(
                     (a, b) =>
                         new Date(b.lastMessageAt ?? 0) -
                         new Date(a.lastMessageAt ?? 0),
@@ -337,15 +224,20 @@ export default function ChatPage() {
         }
     }, []);
 
-    /* fetch messages for a conversation (mock) */
+    /* --- REST: messages for a conversation --- */
+    /* Note: per the docs, GET messages marks the patient's messages as READ
+       as a side effect — so re-calling this for the open conversation also
+       keeps read receipts in sync. */
     const fetchMessages = useCallback(
         async (conversationId, silent = false) => {
             try {
                 if (!silent) setLoadingMessages(true);
-                const data = await mockFetchMessages(conversationId);
-                // avoid clobbering state if user switched conversations mid-request
+                const { data } = await api.get(
+                    API_ENDPOINTS.Chat.getMessages(conversationId),
+                );
+                // avoid clobbering state if the user switched conversations mid-request
                 if (selectedIdRef.current === conversationId) {
-                    setMessages(data);
+                    setMessages((data ?? []).map(normalizeRestMessage));
                 }
             } catch (err) {
                 if (!silent) showToast("Failed to load messages.");
@@ -356,6 +248,7 @@ export default function ChatPage() {
         [],
     );
 
+    /* --- conversations: initial load + periodic fallback sync --- */
     useEffect(() => {
         fetchConversations();
         const interval = setInterval(
@@ -365,9 +258,64 @@ export default function ChatPage() {
         return () => clearInterval(interval);
     }, [fetchConversations]);
 
+    /* --- socket: connect once on mount, disconnect on unmount --- */
+    useEffect(() => {
+        chatSocketService.connect().catch(() => {
+            showToast(
+                "Couldn't connect to live chat — messages will still load, just not instantly.",
+            );
+        });
+
+        const unsubscribe = chatSocketService.onMessage((payload) => {
+            const message = normalizeSocketMessage(payload);
+
+            if (message.conversationId === selectedIdRef.current) {
+                // Message for the conversation currently open — append locally,
+                // then silently re-fetch so the READ side effect fires.
+                setMessages((prev) =>
+                    prev.some((m) => m.id === message.id)
+                        ? prev
+                        : [...prev, message],
+                );
+                fetchMessages(message.conversationId, true);
+            } else {
+                // Message for a conversation not currently open — bump its
+                // preview/unread count. If it's a brand-new conversation we
+                // haven't seen yet, just resync the whole list.
+                setConversations((prev) => {
+                    const exists = prev.some(
+                        (c) => c.id === message.conversationId,
+                    );
+                    if (!exists) {
+                        fetchConversations(true);
+                        return prev;
+                    }
+                    return prev.map((c) =>
+                        c.id === message.conversationId
+                            ? {
+                                  ...c,
+                                  lastMessageAt: message.createdAt,
+                                  unreadCount: (c.unreadCount ?? 0) + 1,
+                              }
+                            : c,
+                    );
+                });
+            }
+        });
+
+        return () => {
+            unsubscribe();
+            chatSocketService.disconnect();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    /* --- messages + join/leave group for whichever conversation is open --- */
     useEffect(() => {
         if (!selectedId) return;
+
         fetchMessages(selectedId);
+        chatSocketService.joinConversation(selectedId);
 
         // opening a conversation reads it — reflect that locally right away
         setConversations((prev) =>
@@ -376,17 +324,16 @@ export default function ChatPage() {
             ),
         );
 
-        const interval = setInterval(
-            () => fetchMessages(selectedId, true),
-            MESSAGES_POLL_MS,
-        );
-        return () => clearInterval(interval);
+        return () => {
+            chatSocketService.leaveConversation(selectedId);
+        };
     }, [selectedId, fetchMessages]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
+    /* --- REST: send message --- */
     const handleSend = async (e) => {
         e.preventDefault();
         const content = draft.trim();
@@ -395,12 +342,16 @@ export default function ChatPage() {
         setSending(true);
         setDraft("");
         try {
-            const data = await mockSendMessage(selectedId, content);
-            setMessages((prev) => [...prev, data]);
+            const { data } = await api.post(
+                API_ENDPOINTS.Chat.sendMessage(selectedId),
+                { content },
+            );
+            const message = normalizeRestMessage(data);
+            setMessages((prev) => [...prev, message]);
             setConversations((prev) =>
                 prev.map((c) =>
                     c.id === selectedId
-                        ? { ...c, lastMessageAt: data.createdAt }
+                        ? { ...c, lastMessageAt: message.createdAt }
                         : c,
                 ),
             );

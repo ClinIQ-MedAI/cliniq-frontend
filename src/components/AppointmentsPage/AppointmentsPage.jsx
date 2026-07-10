@@ -1,16 +1,7 @@
-import React, { useState, useEffect } from "react";
-import {
-    Search,
-    Check,
-    X,
-    ChevronLeft,
-    ChevronRight,
-    Frown,
-} from "lucide-react";
-import api from "../../apis/api";
+import React, { useState, useEffect, useMemo } from "react";
+import { Search, Frown } from "lucide-react";
 import API_ENDPOINTS from "../../apis/endpoints";
-import { useMemo } from "react";
-
+import api from "../../apis/api";
 const ini = (name = "") =>
     name
         .split(" ")
@@ -20,93 +11,20 @@ const ini = (name = "") =>
         .toUpperCase()
         .slice(0, 2);
 
-const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-
-const INITIAL = [
-    {
-        id: 1,
-        name: "Shyam Khamo",
-        disease: "Heart Disease",
-        date: "Jan 27",
-        status: "pending",
-        visits: 3,
-    },
-    {
-        id: 2,
-        name: "Jean Lee Un",
-        disease: "Heart Disease",
-        date: "Jan 27",
-        status: "approved",
-        visits: 2,
-    },
-    {
-        id: 3,
-        name: "Clara Brook",
-        disease: "Heart Disease",
-        date: "Jan 27",
-        status: "pending",
-        visits: 5,
-    },
-    {
-        id: 4,
-        name: "Ahmed Ali",
-        disease: "Cardiovascular",
-        date: "Jan 28",
-        status: "approved",
-        visits: 7,
-    },
-    {
-        id: 5,
-        name: "Sarah Johnson",
-        disease: "Pediatric Cardiology",
-        date: "Jan 28",
-        status: "rejected",
-        visits: 1,
-    },
-    {
-        id: 6,
-        name: "Michael Brown",
-        disease: "Heart Disease",
-        date: "Jan 29",
-        status: "pending",
-        visits: 4,
-    },
-    {
-        id: 7,
-        name: "Emma Wilson",
-        disease: "Cardiac Surgery",
-        date: "Jan 29",
-        status: "approved",
-        visits: 6,
-    },
-    {
-        id: 8,
-        name: "David Lee",
-        disease: "Preventive Cardiology",
-        date: "Jan 30",
-        status: "pending",
-        visits: 2,
-    },
-    {
-        id: 9,
-        name: "Lisa Garcia",
-        disease: "Heart Disease",
-        date: "Jan 30",
-        status: "approved",
-        visits: 3,
-    },
-    {
-        id: 10,
-        name: "Robert Chen",
-        disease: "Pediatric Cardiology",
-        date: "Jan 31",
-        status: "pending",
-        visits: 4,
-    },
-];
-
 const PER_PAGE = 5;
-const FILTERS = ["all", "pending", "approved", "rejected"];
+
+// Matches Booking.Doctor's DoctorBookingResponse:
+// { id, patientId, patientName, patientEmail, patientPhone, date, status }
+// `date` is a DateOnly (e.g. "2026-07-10", no time) and `status` is the
+// BookingStatus enum serialized as a string.
+const STATUS_META = {
+    PENDING: { label: "Pending", pill: "bg-[#FAEEDA] text-[#854F0B]" },
+    CONFIRMED: { label: "Confirmed", pill: "bg-[#E1F5EE] text-[#0F6E56]" },
+    COMPLETED: { label: "Completed", pill: "bg-[#EAF1FB] text-[#185FA5]" },
+    CANCELLED: { label: "Cancelled", pill: "bg-[#FCEBEB] text-[#A32D2D]" },
+};
+
+const FILTERS = ["ALL", "PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"];
 
 const METRIC_COLORS = {
     blue: "text-[#185FA5]",
@@ -126,61 +44,64 @@ function MetricCard({ value, label, color }) {
     );
 }
 
-const PILL = {
-    pending: "bg-[#FAEEDA] text-[#854F0B]",
-    approved: "bg-[#E1F5EE] text-[#0F6E56]",
-    rejected: "bg-[#FCEBEB] text-[#A32D2D]",
-};
-
 function StatusPill({ status }) {
+    const meta = STATUS_META[status] ?? {
+        label: status ?? "Unknown",
+        pill: "bg-subtle text-t2",
+    };
     return (
         <span
-            className={`inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full ${PILL[status]}`}
+            className={`inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full ${meta.pill}`}
         >
-            {cap(status)}
+            {meta.label}
         </span>
     );
 }
 
-function ActionBtn({ active, activeClass, onClick, label, children }) {
-    return (
-        <button
-            onClick={onClick}
-            aria-label={label}
-            className={`w-[26px] h-[26px] rounded-md border flex items-center justify-center transition-colors cursor-pointer
-        ${
-            active
-                ? activeClass
-                : "border-border bg-card text-t3 hover:bg-subtle hover:text-t2"
-        }`}
-        >
-            {children}
-        </button>
-    );
+// Formats whatever the backend sends for `date` (date-only or full ISO
+// datetime) into a friendly "Jan 27, 2:30 PM" style string.
+function formatDateTime(value) {
+    if (!value) return "—";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    const hasTime = /\d{2}:\d{2}/.test(value);
+    return d.toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        ...(hasTime && { hour: "numeric", minute: "2-digit" }),
+    });
 }
 
 export default function AppointmentsPage() {
-    const [data, setData] = useState(INITIAL);
-    const [filter, setFilter] = useState("all");
+    const [data, setData] = useState([]);
+    const [filter, setFilter] = useState("ALL");
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
-    const [isFetchingAllAppointments, setIsFetchingAllAppointments] =
-        useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [loadError, setLoadError] = useState("");
+
     useEffect(() => {
-        async function getAllAppointments() {
+        async function getMyBookings() {
             try {
-                setIsFetchingAllAppointments(true);
+                setIsLoading(true);
+                setLoadError("");
+
+                // GET /api/schedules/bookings -> bare array of DoctorBookingResponse
                 const response = await api.get(
-                    API_ENDPOINTS.getAllAppointments,
+                    API_ENDPOINTS.Doctor.getDoctorScheduleBookings,
                 );
-                setData(response.data);
-            } catch (error) {
-                console.log(error);
+                setData(response.data ?? []);
+            } catch (err) {
+                setLoadError(
+                    err?.response?.data?.title ??
+                        err?.response?.data?.message ??
+                        "Failed to load appointments",
+                );
             } finally {
-                setIsFetchingAllAppointments(false);
+                setIsLoading(false);
             }
         }
-        getAllAppointments();
+        getMyBookings();
     }, []);
 
     useEffect(() => {
@@ -188,14 +109,10 @@ export default function AppointmentsPage() {
     }, [filter, search]);
 
     const filtered = data.filter((a) => {
-        if (filter !== "all" && a.status !== filter) return false;
+        if (filter !== "ALL" && a.status !== filter) return false;
         if (search) {
             const q = search.toLowerCase();
-            if (
-                !a.name.toLowerCase().includes(q) &&
-                !a.disease.toLowerCase().includes(q)
-            )
-                return false;
+            if (!a.patientName?.toLowerCase().includes(q)) return false;
         }
         return true;
     });
@@ -209,46 +126,52 @@ export default function AppointmentsPage() {
     const start = filtered.length ? (safePage - 1) * PER_PAGE + 1 : 0;
     const end = Math.min(safePage * PER_PAGE, filtered.length);
 
-    const toggle = (id, next) => {
-        const appointmentIndex = data.findIndex((p) => p.id === id);
-        if (appointmentIndex !== -1) {
-            api.patch(API_ENDPOINTS.updateAppointmentStatus(id), {
-                status: next,
-            })
-                .then(() => {
-                    setData((prevData) => {
-                        const updatedAppointments = [...prevData];
-                        updatedAppointments[appointmentIndex] = {
-                            ...updatedAppointments[appointmentIndex],
-                            status: next,
-                        };
-                        return updatedAppointments;
-                    });
-                })
-                .catch((err) => {
-                    console.log(err);
-                });
+    // Optimistically updates a booking's status locally after confirming
+    // the change against the backend.
+    // Backend route is PATCH /api/schedules/bookings/{id}/status with body
+    // { status: "CONFIRMED" | "CANCELLED" | "COMPLETED" | "PENDING" } —
+    // must be PATCH, not PUT, or the server returns 405.
+    async function updateBookingStatus(bookingId, newStatus) {
+        try {
+            await api.patch(
+                API_ENDPOINTS.Schedules.editBookingStatusInSchedule(bookingId),
+                { status: newStatus },
+            );
+        } catch (err) {
+            // TODO: surface an error toast / revert optimistic update
+            console.error("Failed to update booking status", err);
+            return;
         }
-    };
 
-    const counts = useMemo(() => {
-        return {
+        setData((prev) =>
+            prev.map((a) =>
+                a.id === bookingId ? { ...a, status: newStatus } : a,
+            ),
+        );
+    }
+
+    const handleAccept = (bookingId) =>
+        updateBookingStatus(bookingId, "CONFIRMED");
+    const handleReject = (bookingId) =>
+        updateBookingStatus(bookingId, "CANCELLED");
+
+    const counts = useMemo(
+        () => ({
             total: data.length,
-            pending: data.filter((a) => a.status === "pending").length,
-            approved: data.filter((a) => a.status === "approved").length,
-            rejected: data.filter((a) => a.status === "rejected").length,
-        };
-    }, [data]);
+            pending: data.filter((a) => a.status === "PENDING").length,
+            confirmed: data.filter((a) => a.status === "CONFIRMED").length,
+            completed: data.filter((a) => a.status === "COMPLETED").length,
+        }),
+        [data],
+    );
 
     return (
         <div className="flex flex-col gap-5 pb-8 px-5 pt-3">
-            <title>Appointment - ClinIQ</title>
+            <title>Appointments - ClinIQ</title>
             <div>
-                <h1 className="text-xl font-medium text-t1">
-                    Appointment requests
-                </h1>
+                <h1 className="text-xl font-medium text-t1">Appointments</h1>
                 <p className="text-sm text-t2 mt-1">
-                    Manage and review all appointment requests
+                    All bookings made against your schedule
                 </p>
             </div>
 
@@ -260,14 +183,14 @@ export default function AppointmentsPage() {
                     color="amber"
                 />
                 <MetricCard
-                    value={counts.approved}
-                    label="Approved"
+                    value={counts.confirmed}
+                    label="Confirmed"
                     color="green"
                 />
                 <MetricCard
-                    value={counts.rejected}
-                    label="Rejected"
-                    color="red"
+                    value={counts.completed}
+                    label="Completed"
+                    color="blue"
                 />
             </div>
 
@@ -276,7 +199,7 @@ export default function AppointmentsPage() {
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                     <input
                         type="text"
-                        placeholder="Search by name or condition…"
+                        placeholder="Search by patient name…"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-card text-t1 placeholder:text-t3 focus:outline-none focus:border-[#185FA5] transition-colors"
@@ -294,20 +217,28 @@ export default function AppointmentsPage() {
                         : "bg-card border-border text-t2 hover:bg-subtle hover:text-t1"
                 }`}
                         >
-                            {cap(f)}
+                            {f === "ALL" ? "All" : (STATUS_META[f]?.label ?? f)}
                         </button>
                     ))}
                 </div>
             </div>
 
             <div className="bg-card border border-border rounded-xl overflow-hidden">
-                {slice.length === 0 ? (
+                {isLoading ? (
+                    <div className="py-10 text-center text-sm text-t2">
+                        Loading appointments...
+                    </div>
+                ) : loadError ? (
+                    <div className="py-10 text-center text-sm text-red-600">
+                        {loadError}
+                    </div>
+                ) : slice.length === 0 ? (
                     <div className="flex flex-col items-center gap-2 py-10 text-t2 text-sm">
                         <Frown className="w-7 h-7" />
                         <p>No appointments match your search.</p>
                         <button
                             onClick={() => {
-                                setFilter("all");
+                                setFilter("ALL");
                                 setSearch("");
                             }}
                             className="mt-1 px-4 py-1.5 rounded-lg border border-slate-200 text-slate-600
@@ -319,118 +250,80 @@ export default function AppointmentsPage() {
                 ) : (
                     <table className="w-full text-sm border-collapse table-fixed">
                         <colgroup>
-                            <col className="w-[24%]" />
+                            <col className="w-[32%]" />
+                            <col className="w-[28%]" />
+                            <col className="w-[18%]" />
                             <col className="w-[22%]" />
-                            <col className="w-[10%]" />
-                            <col className="w-[11%]" />
-                            <col className="w-[14%]" />
-                            <col className="w-[19%]" />
                         </colgroup>
                         <thead>
                             <tr className="bg-subtle border-b border-border-sub">
-                                {[
-                                    "Patient",
-                                    "Condition",
-                                    "Date",
-                                    "Visits",
-                                    "Status",
-                                    "Action",
-                                ].map((h, i) => (
-                                    <th
-                                        key={h}
-                                        className={`text-[11px] font-medium text-t3 px-3.5 py-2.5 text-left
-                                ${i === 5 ? "text-center" : ""}`}
-                                    >
-                                        {h}
-                                    </th>
-                                ))}
+                                {["Patient", "Date", "Status", "Actions"].map(
+                                    (h) => (
+                                        <th
+                                            key={h}
+                                            className="text-[11px] font-medium text-t3 px-3.5 py-2.5 text-left"
+                                        >
+                                            {h}
+                                        </th>
+                                    ),
+                                )}
                             </tr>
                         </thead>
                         <tbody>
-                            {!isFetchingAllAppointments &&
-                                slice.map((a) => (
-                                    <tr
-                                        key={a.id}
-                                        className="border-b border-border-sub last:border-none hover:bg-subtle transition-colors"
-                                    >
-                                        <td className="px-3.5 py-2.5">
-                                            <div className="flex items-center gap-2">
-                                                <div
-                                                    className="w-7 h-7 rounded-full bg-[#E6F1FB] text-[#0C447C] flex items-center
-                                      justify-center text-[11px] font-medium shrink-0"
-                                                >
-                                                    {ini(a.name)}
-                                                </div>
-                                                <span className="text-t1">
-                                                    {a.name}
-                                                </span>
+                            {slice.map((a) => (
+                                <tr
+                                    key={a.id}
+                                    className="border-b border-border-sub last:border-none hover:bg-subtle transition-colors"
+                                >
+                                    <td className="px-3.5 py-2.5">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-7 h-7 rounded-full bg-[#E6F1FB] text-[#0C447C] flex items-center justify-center text-[11px] font-medium shrink-0">
+                                                {ini(a.patientName)}
                                             </div>
-                                        </td>
-                                        <td className="px-3.5 py-2.5 text-t2">
-                                            {a.disease}
-                                        </td>
-                                        <td className="px-3.5 py-2.5 text-t2">
-                                            {a.date}
-                                        </td>
-                                        <td className="px-3.5 py-2.5">
-                                            <span className="text-[11px] bg-subtle text-t2 px-2 py-0.5 rounded-full">
-                                                {a.visits}×
+                                            <span className="text-t1">
+                                                {a.patientName ?? "—"}
                                             </span>
-                                        </td>
-                                        <td className="px-3.5 py-2.5">
-                                            <StatusPill status={a.status} />
-                                        </td>
-                                        <td className="">
-                                            <div className="flex items-center justify-center gap-1.5">
-                                                <ActionBtn
-                                                    active={
-                                                        a.status === "approved"
-                                                    }
-                                                    activeClass="bg-[#E1F5EE] border-[#5DCAA5] text-[#085041]"
+                                        </div>
+                                    </td>
+                                    <td className="px-3.5 py-2.5 text-t2">
+                                        {formatDateTime(a.date)}
+                                    </td>
+                                    <td className="px-3.5 py-2.5">
+                                        <StatusPill status={a.status} />
+                                    </td>
+                                    <td className="px-3.5 py-2.5">
+                                        {a.status === "PENDING" ? (
+                                            <div className="flex items-center gap-1.5">
+                                                <button
                                                     onClick={() =>
-                                                        toggle(a.id, "approved")
+                                                        handleAccept(a.id)
                                                     }
-                                                    label={`Approve ${a.name}`}
+                                                    className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#E1F5EE] text-[#0F6E56] hover:bg-[#CFEEE3] transition-colors cursor-pointer"
                                                 >
-                                                    <span
-                                                        style={{
-                                                            display: "flex",
-                                                            width: 14,
-                                                            height: 14,
-                                                        }}
-                                                    >
-                                                        <Check size={14} />
-                                                    </span>
-                                                </ActionBtn>
-                                                <ActionBtn
-                                                    active={
-                                                        a.status === "rejected"
-                                                    }
-                                                    activeClass="bg-[#FCEBEB] border-[#F09595] text-[#A32D2D]"
+                                                    Accept
+                                                </button>
+                                                <button
                                                     onClick={() =>
-                                                        toggle(a.id, "rejected")
+                                                        handleReject(a.id)
                                                     }
-                                                    label={`Reject ${a.name}`}
+                                                    className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#FCEBEB] text-[#A32D2D] hover:bg-[#F9D9D9] transition-colors cursor-pointer"
                                                 >
-                                                    <span
-                                                        style={{
-                                                            display: "flex",
-                                                            width: 14,
-                                                            height: 14,
-                                                        }}
-                                                    >
-                                                        <X size={14} />
-                                                    </span>
-                                                </ActionBtn>
+                                                    Reject
+                                                </button>
                                             </div>
-                                        </td>
-                                    </tr>
-                                ))}
+                                        ) : (
+                                            <span className="text-t3 text-xs">
+                                                —
+                                            </span>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 )}
 
-                {filtered.length > 0 && (
+                {!isLoading && !loadError && filtered.length > 0 && (
                     <div className="flex items-center justify-between px-3.5 py-2.5 border-t border-border-sub flex-wrap gap-2">
                         <span className="text-xs text-t3">
                             Showing {start}–{end} of {filtered.length}
@@ -444,9 +337,7 @@ export default function AppointmentsPage() {
                                 aria-label="Previous page"
                                 className="w-7 h-7 flex items-center justify-center rounded-md border border-border bg-card text-t2 hover:bg-subtle disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                             >
-                                <span>
-                                    <ChevronLeft className="w-4 h-4" />
-                                </span>
+                                ‹
                             </button>
                             {Array.from(
                                 { length: totalPages },
@@ -475,15 +366,10 @@ export default function AppointmentsPage() {
                                     setPage((p) => Math.min(p + 1, totalPages))
                                 }
                                 disabled={safePage === totalPages}
-                                aria-label="Previous page"
+                                aria-label="Next page"
                                 className="w-7 h-7 flex items-center justify-center rounded-md border border-border bg-card text-t2 hover:bg-subtle disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                             >
-                                <span>
-                                    <ChevronRight
-                                        className="w-4 h-4"
-                                        size={10}
-                                    />
-                                </span>
+                                ›
                             </button>
                         </div>
                     </div>

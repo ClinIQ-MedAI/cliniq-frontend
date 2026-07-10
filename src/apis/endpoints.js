@@ -14,6 +14,10 @@ const API_ENDPOINTS = {
         getOrUpdateMe: "/doctor/me",
         changePassword: "/doctor/me/change-password",
         survey: "/doctor/Survey",
+        getDoctorScheduleBookings: `/doctor/schedules/bookings`,
+        determineDoctorAvailability: "/doctor/schedules/availability",
+        generateSchedule: "/doctor/schedules/generate",
+        getAllSchedules: "/doctor/schedules",
     },
     Admin: {
         Booking: { getAllBookings: "/admin/bookings" },
@@ -49,23 +53,33 @@ const API_ENDPOINTS = {
              */
             unlockPatient: (patientId) => `/admin/Patients/${patientId}/unlock`,
         },
+        Contact: {
+            getAll: `/admin/contact-us`,
+        },
+    },
+    Bookings: {
+        getMyBookings: "/bookings/me",
     },
     Chat: {
-        // GET only — doctors can't create a conversation, only the patient can start one
-        getConversations: "/chat/conversations",
-        getOrSendMessages: (conversationId) =>
-            `/chat/conversations/${conversationId}/messages`,
+        getConversations: "/doctor/chat/conversations",
+        getMessages: (conversationId) =>
+            `/doctor/chat/conversations/${conversationId}/messages`,
+        sendMessage: (conversationId) =>
+            `/doctor/chat/conversations/${conversationId}/messages`,
     },
     Schedules: {
-        getAllSchedules: "/schedules",
-        determineDoctorAvailability: "/schedules/availability",
-        generateSchedule: "/schedules/generate",
+        getScheduleBookings: "/schedules/bookings",
+        editBookingStatusInSchedule: (scheduleId) =>
+            `/doctor/schedules/bookings/${scheduleId}/status`,
     },
     // getPendingAppointments: "/doctor/appointments/pending",
     // updateAppointmentStatus: (appointmentId) =>
     //     `doctor/appointments/${appointmentId}/status`,
     getDashboardMetrices: "doctor/metrics",
     // getAllAppointments: "/doctor/appointments",
+    Notifications: {
+        getAll: `/notifications`,
+    },
 };
 
 export default API_ENDPOINTS;

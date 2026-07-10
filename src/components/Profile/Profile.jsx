@@ -16,6 +16,7 @@ import {
 import api from "../../apis/api";
 import { User } from "lucide-react";
 import API_ENDPOINTS from "../../apis/endpoints";
+import { Users } from "lucide-react";
 
 export default function Profile({ onUpdateDoctorInfo }) {
     const { user } = useUser();
@@ -150,7 +151,7 @@ export default function Profile({ onUpdateDoctorInfo }) {
                 <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden flex flex-col lg:flex-row">
                     {/* ── LEFT: Identity Panel ── */}
                     <div
-                        className="lg:w-72 flex-shrink-0 flex flex-col items-center py-10 px-8 text-white relative"
+                        className="lg:w-72 shrink-0 flex flex-col items-center py-10 px-8 text-white relative"
                         style={{
                             background:
                                 "linear-gradient(160deg, #0B1629 0%, #185FA5 100%)",
@@ -164,11 +165,17 @@ export default function Profile({ onUpdateDoctorInfo }) {
 
                         {/* Photo */}
                         <div className="relative mt-4 mb-5">
-                            <img
-                                src={displayData.image}
-                                alt={displayData.name}
-                                className="w-36 h-36 rounded-full object-cover border-4 border-white/20 shadow-2xl"
-                            />
+                            {displayData.image ? (
+                                <img
+                                    src={displayData.image}
+                                    alt={displayData.name}
+                                    className="w-36 h-36 rounded-full object-cover border-4 border-white/20 shadow-2xl"
+                                />
+                            ) : (
+                                <div className="w-36 h-36 rounded-full text-t2 object-cover flex justify-center items-center border-4 border-white/20 shadow-2xl">
+                                    <Users size={50} />
+                                </div>
+                            )}
                             {isEditing && (
                                 <label className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-white flex items-center justify-center cursor-pointer shadow-md hover:scale-105 transition-transform">
                                     <Camera
@@ -543,7 +550,7 @@ function Divider() {
 function InfoPill({ icon, label, editing, children }) {
     return (
         <div className="flex items-center gap-3 text-white/70">
-            <span className="text-white/50 flex-shrink-0">{icon}</span>
+            <span className="text-white/50 shrink-0">{icon}</span>
             {editing ? (
                 children
             ) : (

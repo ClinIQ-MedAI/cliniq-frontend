@@ -1,13 +1,23 @@
-import { Users } from "lucide-react";
-import { Calendar } from "lucide-react";
-import { ActivityIcon } from "lucide-react";
-import { LogOut } from "lucide-react";
-import { LayoutDashboard } from "lucide-react";
-import { Link, Outlet } from "react-router-dom";
+import {
+    Users,
+    Calendar,
+    ActivityIcon,
+    LogOut,
+    LayoutDashboard,
+} from "lucide-react";
+import { NavLink, Outlet } from "react-router-dom";
 import { useUser } from "../contexts/UserContext";
 
 export const AdminSidebar = () => {
     const { logout } = useUser();
+
+    const navLinkClasses = ({ isActive }) =>
+        `flex items-center gap-3 px-4 py-3 font-medium transition-colors ${
+            isActive
+                ? "bg-subtle text-primary border-r-4 border-primary rounded-l-lg"
+                : "text-gray-500 hover:bg-subtle/50 hover:text-primary rounded-lg"
+        }`;
+
     return (
         <div className="flex w-full min-h-screen">
             <aside className="w-64 bg-card border-r border-border flex flex-col transition-colors duration-300">
@@ -19,32 +29,21 @@ export const AdminSidebar = () => {
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2 mt-4">
-                    <Link
-                        to="/admin/dashboard"
-                        className="flex items-center gap-3 px-4 py-3 bg-subtle text-primary border-r-4 border-primary rounded-l-lg font-medium"
-                    >
+                    <NavLink to="/admin/dashboard" className={navLinkClasses}>
                         <LayoutDashboard size={20} /> Overview
-                    </Link>
-                    <Link
-                        to="/admin/doctors"
-                        className="flex items-center gap-3 px-4 py-3 bg-subtle text-primary border-r-4 border-primary rounded-l-lg font-medium"
-                    >
+                    </NavLink>
+
+                    <NavLink to="/admin/doctors" className={navLinkClasses}>
                         <ActivityIcon size={20} /> Doctors
-                    </Link>
+                    </NavLink>
 
-                    <Link
-                        to="/admin/patients"
-                        className="flex items-center gap-3 px-4 py-3 bg-subtle text-primary border-r-4 border-primary rounded-l-lg font-medium"
-                    >
+                    <NavLink to="/admin/patients" className={navLinkClasses}>
                         <Users size={20} /> Patients
-                    </Link>
+                    </NavLink>
 
-                    <Link
-                        to="/admin/bookings"
-                        className="flex items-center gap-3 px-4 py-3 bg-subtle text-primary border-r-4 border-primary rounded-l-lg font-medium"
-                    >
+                    <NavLink to="/admin/bookings" className={navLinkClasses}>
                         <Calendar size={20} /> Bookings
-                    </Link>
+                    </NavLink>
                 </nav>
 
                 <div className="p-4 border-t border-border">

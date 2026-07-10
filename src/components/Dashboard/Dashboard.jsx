@@ -1,14 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "../../contexts/UserContext";
-import { patientsData } from "../../Services/mockData";
 import "./Dashboard.css";
-import { Users, Calendar, TrendingUp, Star } from "lucide-react";
-import { Check } from "lucide-react";
-import { X } from "lucide-react";
+import { Users, Calendar, UserPlus, Clock, Loader2 } from "lucide-react";
 import api from "../../apis/api";
-import toast from "react-hot-toast";
 import API_ENDPOINTS from "../../apis/endpoints";
-import { Loader2 } from "lucide-react";
 
 /* ─── helpers ──────────────────────────────────────────────── */
 const ini = (name = "") =>
@@ -20,18 +15,19 @@ const ini = (name = "") =>
         .toUpperCase()
         .slice(0, 2);
 
-const fmt = (n) =>
-    new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 0,
-    }).format(n);
-
 const getGreeting = () => {
     const h = new Date().getHours();
     if (h < 12) return "Good morning";
     if (h < 18) return "Good afternoon";
     return "Good evening";
+};
+
+const todayISO = () => new Date().toISOString().split("T")[0];
+
+const addDaysISO = (isoDate, days) => {
+    const d = new Date(isoDate);
+    d.setDate(d.getDate() + days);
+    return d.toISOString().split("T")[0];
 };
 
 /* ─── metric card ───────────────────────────────────────────── */
@@ -52,135 +48,71 @@ const MetricCard = ({ Icon, label, value, sub, subUp }) => (
     </div>
 );
 
-/* ─── status pill ───────────────────────────────────────────── */
-const STATUS_CLASS = {
-    pending: "db-pill-pending",
-    approved: "db-pill-approved",
-    rejected: "db-pill-rejected",
+/* ─── weekly schedule strip ────────────────────────────────────── */
+const STATUS_STYLES = {
+    Available: "db-day-available",
+    Full: "db-day-full",
+    Closed: "db-day-closed",
 };
 
-const StatusPill = ({ status }) => (
-    <span className={`db-pill ${STATUS_CLASS[status]}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
-);
-
-/* ─── appointments table ────────────────────────────────────── */
-const AppointmentsTable = () => {
-    const [pendingAppointments, setPendingAppointments] = useState([]);
-    useEffect(() => {
-        api.get(API_ENDPOINTS.getPendingAppointments)
-            .then((response) => setPendingAppointments(response.data))
-            .catch((err) => console.log(err));
-    }, []);
-    const toggle = (id, next) => {
-        const appointmentIndex = pendingAppointments.findIndex(
-            (p) => p.id === id,
+const WeeklySchedule = ({ calendar, isLoading, error }) => {
+    if (isLoading) {
+        return (
+            <div className="flex items-center gap-2 text-sm text-t2 py-4">
+                <Loader2 size={15} className="animate-spin" />
+                Loading schedule...
+            </div>
         );
-        if (appointmentIndex !== -1) {
-            api.patch(API_ENDPOINTS.updateAppointmentStatus(id), {
-                status: next,
-            })
-                .then(() => {
-                    pendingAppointments.splice(appointmentIndex, 1);
-                })
-                .catch((err) => {
-                    console.log(err);
-                });
-        }
-    };
+    }
+    if (error) {
+        return <div className="text-sm text-red-600 py-4">{error}</div>;
+    }
+    if (!calendar || calendar.length === 0) {
+        return (
+            <p className="text-sm text-t3 py-4">
+                No schedule generated yet — set your availability and generate a
+                range from the Availability page.
+            </p>
+        );
+    }
 
     return (
-        <div className="overflow-x-auto w-full max-w-full">
-            <table className="db-table">
-                <thead>
-                    <tr>
-                        <th>Patient</th>
-                        <th>Condition</th>
-                        <th>Date</th>
-                        <th style={{ textAlign: "center" }}>Status</th>
-                        <th style={{ textAlign: "center" }}>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {pendingAppointments.map((r) => (
-                        <tr key={r.id}>
-                            <td>
-                                <div className="db-name-cell">
-                                    <div className="db-av">{ini(r.name)}</div>
-                                    <span>{r.name}</span>
-                                </div>
-                            </td>
-                            <td className="db-muted">{r.disease}</td>
-                            <td className="db-muted">{r.date}</td>
-                            <td style={{ textAlign: "center" }}>
-                                <StatusPill status={r.status} />
-                            </td>
-                            <td style={{ textAlign: "center" }}>
-                                <div className="db-action-btns">
-                                    <button
-                                        className={`db-abt ${r.status === "approved" ? "db-abt-ok" : ""}`}
-                                        onClick={() => toggle(r.id, "approved")}
-                                        aria-label={`Approve ${r.name}`}
-                                    >
-                                        <span
-                                            style={{
-                                                display: "flex",
-                                                width: 14,
-                                                height: 14,
-                                            }}
-                                        >
-                                            <Check size={14} />
-                                        </span>
-                                    </button>
-                                    <button
-                                        className={`db-abt ${r.status === "rejected" ? "db-abt-rej" : ""}`}
-                                        onClick={() => toggle(r.id, "rejected")}
-                                        aria-label={`Reject ${r.name}`}
-                                    >
-                                        <span
-                                            style={{
-                                                display: "flex",
-                                                width: 14,
-                                                height: 14,
-                                            }}
-                                        >
-                                            <X size={14} />
-                                        </span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+        <div className="db-week-strip">
+            {calendar.map((day) => (
+                <div
+                    key={day.date}
+                    className={`db-day-card ${STATUS_STYLES[day.status] ?? "db-day-closed"}`}
+                >
+                    <div className="db-day-name">
+                        {dayNameFromDate(day.date).slice(0, 3)}
+                    </div>
+                    <div className="db-day-date">
+                        {new Date(day.date).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                        })}
+                    </div>
+                    <div className="db-day-count">{day.bookingCount}</div>
+                    <div className="db-day-status">{deriveStatus(day)}</div>
+                </div>
+            ))}
         </div>
     );
 };
 
-/* ─── revenue chart ─────────────────────────────────────────── */
-const RevenueChart = () => {
+/* ─── performance chart ─────────────────────────────────────────── */
+// NOTE: no backend endpoint exists yet for this (no /dashboard/metrics
+// in the OpenAPI spec). Keeping the fallback-only version until the
+// backend adds something like GET /api/doctor/dashboard/metrics.
+const PerformanceChart = () => {
     const canvasRef = useRef(null);
     const chartRef = useRef(null);
-    const [isLoadingChartData, setIsLoadingChartData] = useState(true);
-    const [chartData, setChartData] = useState(null);
-    useEffect(() => {
-        async function GetDashboardMetricesData() {
-            try {
-                setIsLoadingChartData(true);
 
-                const response = await api.get(
-                    API_ENDPOINTS.getDashboardMetrices,
-                );
-                setChartData(response.data?.chartData);
-            } catch (error) {
-                console.log(error);
-            } finally {
-                setIsLoadingChartData(false);
-            }
-        }
-        GetDashboardMetricesData();
-    }, []);
+    const chartData = {
+        months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+        completed: [120, 135, 125, 145, 160, 150],
+        canceled: [15, 10, 12, 8, 5, 10],
+    };
 
     useEffect(() => {
         const isDark = window.matchMedia(
@@ -189,12 +121,7 @@ const RevenueChart = () => {
         const gridColor = isDark ? "rgba(255,255,255,.06)" : "rgba(0,0,0,.06)";
         const tickColor = isDark ? "#888" : "#94a3b8";
 
-        if (
-            isLoadingChartData ||
-            !chartData ||
-            !canvasRef.current ||
-            typeof window.Chart === "undefined"
-        ) {
+        if (!canvasRef.current || typeof window.Chart === "undefined") {
             return;
         }
         if (chartRef.current) {
@@ -204,19 +131,19 @@ const RevenueChart = () => {
         chartRef.current = new window.Chart(canvasRef.current, {
             type: "bar",
             data: {
-                labels: chartData?.months || [],
+                labels: chartData.months,
                 datasets: [
                     {
-                        label: "Total revenue",
-                        data: chartData?.revenue || [],
+                        label: "Completed",
+                        data: chartData.completed,
                         backgroundColor: "#185FA5",
                         borderRadius: 4,
                         barPercentage: 0.5,
                     },
                     {
-                        label: "Consultations",
-                        data: chartData?.consultations || [],
-                        backgroundColor: "#9FE1CB",
+                        label: "Canceled/No-show",
+                        data: chartData.canceled,
+                        backgroundColor: "#f43f5e",
                         borderRadius: 4,
                         barPercentage: 0.5,
                     },
@@ -228,7 +155,9 @@ const RevenueChart = () => {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        callbacks: { label: (c) => fmt(c.parsed.y) },
+                        callbacks: {
+                            label: (c) => ` ${c.parsed.y} Appointments`,
+                        },
                     },
                 },
                 scales: {
@@ -239,11 +168,7 @@ const RevenueChart = () => {
                     },
                     y: {
                         grid: { color: gridColor },
-                        ticks: {
-                            color: tickColor,
-                            font: { size: 11 },
-                            callback: (v) => "$" + v / 1000 + "k",
-                        },
+                        ticks: { color: tickColor, font: { size: 11 } },
                         border: { display: false },
                     },
                 },
@@ -255,50 +180,96 @@ const RevenueChart = () => {
                 chartRef.current = null;
             }
         };
-    }, [chartData, isLoadingChartData]);
+    }, []);
 
-    if (isLoadingChartData) {
-        return (
-            <div className="flex justify-center gap-4">
-                <Loader2 className="animate-spin" />
-                <div>Loading Chart Data...</div>
-            </div>
-        );
-    }
     return (
-        <div
-            className="db-chart-block"
-            style={{ display: isLoadingChartData ? "none" : "" }}
-        >
+        <div className="db-chart-block">
             <div className="db-legend">
                 <span className="db-leg-item">
                     <span
                         className="db-leg-sq"
                         style={{ background: "#185FA5" }}
                     />
-                    Total revenue
+                    Completed
                 </span>
                 <span className="db-leg-item">
                     <span
                         className="db-leg-sq"
-                        style={{ background: "#9FE1CB" }}
+                        style={{ background: "#f43f5e" }}
                     />
-                    Consultations
+                    Canceled
                 </span>
             </div>
             <div className="db-chart-wrap">
                 <canvas
                     ref={canvasRef}
                     role="img"
-                    aria-label="Monthly revenue bar chart January to June 2024, peaking at $24,580 in May"
-                >
-                    Monthly revenue trend Jan–Jun 2024.
-                </canvas>
+                    aria-label="Appointments chart"
+                ></canvas>
             </div>
         </div>
     );
 };
 
+/* ─── notifications → smart alerts ───────────────────────────── */
+const DOT_BY_TYPE = {
+    BOOKING_CANCELLED: "hi",
+    DOCTOR_JOIN_REQUEST: "hi",
+    BOOKING_CREATED: "md",
+    BOOKING_CONFIRMED: "md",
+    PATIENT_NEW_REGISTRATION: "md",
+    BOOKING_COMPLETED: "lo",
+    CONTACT_US_MESSAGE: "lo",
+    ADMIN_BROADCAST: "lo",
+};
+const timeAgo = (isoDate) => {
+    const diffMs = Date.now() - new Date(isoDate).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins} min${mins > 1 ? "s" : ""} ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} hour${hrs > 1 ? "s" : ""} ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days} day${days > 1 ? "s" : ""} ago`;
+};
+
+const SmartAlerts = ({ notifications, isLoading, error }) => {
+    if (isLoading) {
+        return (
+            <div className="flex items-center gap-2 text-sm text-t2 py-4">
+                <Loader2 size={15} className="animate-spin" />
+                Loading alerts...
+            </div>
+        );
+    }
+    if (error) {
+        return <div className="text-sm text-red-600 py-4">{error}</div>;
+    }
+    if (!notifications || notifications.length === 0) {
+        return <p className="text-sm text-t3 py-4">No new alerts.</p>;
+    }
+    return (
+        <>
+            {notifications.map((n) => (
+                <div key={n.id} className="db-ann-row">
+                    <div
+                        className={`db-ann-dot db-ann-dot-${DOT_BY_TYPE[n.type] ?? "lo"}`}
+                    />
+                    <div>
+                        <div className="db-ann-text">{n.title ?? n.body}</div>
+                        <div className="db-ann-date">
+                            {timeAgo(n.createdAt)}
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </>
+    );
+};
+const dayNameFromDate = (iso) =>
+    new Date(iso).toLocaleDateString(undefined, { weekday: "long" });
+
+const deriveStatus = (day) => (day.isAvailable ? "Available" : "Closed");
 /* ─── avatar colours cycling ────────────────────────────────── */
 const AV_CLASSES = ["db-cl-a", "db-cl-b", "db-cl-c"];
 
@@ -307,42 +278,107 @@ export default function Dashboard() {
     const { user } = useUser();
     const [time, setTime] = useState(new Date());
 
+    const [calendar, setCalendar] = useState([]);
+    const [isLoadingSchedule, setIsLoadingSchedule] = useState(true);
+    const [scheduleError, setScheduleError] = useState("");
+
+    const [notifications, setNotifications] = useState([]);
+    const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
+    const [notificationsError, setNotificationsError] = useState("");
+    const [recentBookings, setRecentBookings] = useState([]);
+    const [isLoadingRecent, setIsLoadingRecent] = useState(true);
+
     useEffect(() => {
         const t = setInterval(() => setTime(new Date()), 1000);
         return () => clearInterval(t);
     }, []);
 
-    const clients = patientsData.slice(0, 3);
+    // Schedule: now hits GET /api/doctor/schedules?from=&to=
+    // (doctor is resolved server-side from the JWT, no doctorId param needed)
+    useEffect(() => {
+        async function fetchWeeklySchedule() {
+            try {
+                setIsLoadingSchedule(true);
+                setScheduleError("");
+                const from = todayISO();
+                const to = addDaysISO(from, 6);
+                const res = await api.get(
+                    API_ENDPOINTS.Doctor.getAllSchedules,
+                    {
+                        params: { from, to },
+                    },
+                );
+                setCalendar(res.data ?? []);
+            } catch (err) {
+                setScheduleError(
+                    err?.response?.data?.title ??
+                        err?.response?.data?.message ??
+                        "Failed to load schedule",
+                );
+            } finally {
+                setIsLoadingSchedule(false);
+            }
+        }
+        fetchWeeklySchedule();
+    }, []);
 
-    const announcements = [
-        {
-            text: "Meeting rescheduled to 28 May, Conference Room A",
-            date: "Jan 15",
-            dot: "hi",
-        },
-        {
-            text: "Doctors requested to update patient records by end of week",
-            date: "Jan 14",
-            dot: "md",
-        },
-        {
-            text: "Dr. Faisal completed 400 surgeries — congratulations!",
-            date: "Jan 13",
-            dot: "lo",
-        },
-    ];
+    // Smart Alerts: now hits GET /api/notifications
+    useEffect(() => {
+        async function fetchNotifications() {
+            try {
+                setIsLoadingNotifications(true);
+                setNotificationsError("");
+                const res = await api.get(API_ENDPOINTS.Notifications.getAll);
+                setNotifications((res.data ?? []).slice(0, 5));
+            } catch (err) {
+                setNotificationsError(
+                    err?.response?.data?.title ??
+                        err?.response?.data?.message ??
+                        "Failed to load alerts",
+                );
+            } finally {
+                setIsLoadingNotifications(false);
+            }
+        }
+        fetchNotifications();
+    }, []);
+
+    const today = todayISO();
+    const todaysCount =
+        calendar.find((d) => d.date === today)?.bookingCount ?? 0;
+
+    useEffect(() => {
+        async function fetchRecent() {
+            try {
+                setIsLoadingRecent(true);
+                const res = await api.get(
+                    API_ENDPOINTS.Doctor.getDoctorScheduleBookings,
+                );
+                const completed = (res.data ?? [])
+                    .filter((b) => b.status === "COMPLETED")
+                    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                setRecentBookings(completed.slice(0, 3));
+            } catch {
+                setRecentBookings([]);
+            } finally {
+                setIsLoadingRecent(false);
+            }
+        }
+        fetchRecent();
+    }, []);
+
     return (
         <div className="db-root">
-            {/* welcome */}
             <title>Dashboard - ClinIQ</title>
             <div className="db-welcome">
                 <div>
                     <h1 className="db-welcome-name">
-                        {getGreeting()},{" "}
-                        {`${user?.firstName} ${user?.lastName}`}
+                        {getGreeting()}, {user?.user?.firstName}{" "}
+                        {user?.user?.lastName}
                     </h1>
                     <p className="db-welcome-sub">
-                        Overview of appointments, patients and announcements
+                        Overview of appointments, patients, and alerts
                     </p>
                 </div>
                 <div className="db-clock">
@@ -366,90 +402,85 @@ export default function Dashboard() {
             <div className="db-metrics">
                 <MetricCard
                     Icon={Users}
-                    label="Patients treated"
-                    value="3,247"
-                    sub="↑ 12% vs last month"
+                    label="Total Patients"
+                    value="1,247"
+                    sub="↑ 8% vs last month"
                     subUp={true}
                 />
                 <MetricCard
                     Icon={Calendar}
-                    label="Today's appointments"
-                    value="18"
-                    sub="↑ 3 more than yesterday"
-                    subUp={true}
+                    label="Today's Appointments"
+                    value={isLoadingSchedule ? "—" : todaysCount}
                 />
                 <MetricCard
-                    Icon={TrendingUp}
-                    label="Monthly revenue"
-                    value="$24,580"
+                    Icon={UserPlus}
+                    label="New Patients This Month"
+                    value="84"
                     sub="↑ 15% vs last month"
                     subUp={true}
                 />
                 <MetricCard
-                    Icon={Star}
-                    label="Average rating"
-                    value="4.8"
-                    sub="Based on 324 reviews"
+                    Icon={Clock}
+                    label="Avg. Consultation Time"
+                    value="18 mins"
+                    sub="Optimal efficiency"
+                    subUp={true}
                 />
             </div>
 
-            {/* main grid */}
             <div className="db-grid">
-                {/* left column */}
                 <div className="db-left">
                     <div className="db-card">
                         <div className="db-card-title">
-                            Appointment requests
+                            This week's schedule
                         </div>
-                        <AppointmentsTable />
+                        <WeeklySchedule
+                            calendar={calendar}
+                            isLoading={isLoadingSchedule}
+                            error={scheduleError}
+                        />
                     </div>
 
                     <div className="db-card text-center">
-                        <div className="db-card-title">Monthly revenue</div>
-
-                        <RevenueChart />
+                        <div className="db-card-title">
+                            Appointments Performance (6 Months)
+                        </div>
+                        <PerformanceChart />
                     </div>
                 </div>
 
-                {/* right column */}
                 <aside className="db-right">
                     <div className="db-card">
                         <div className="db-card-title">
-                            Most visited clients
+                            Recent Consultations
                         </div>
-                        {clients.map((p, i) => (
+                        {recentBookings.map((p, i) => (
                             <div key={p.id} className="db-client-row">
                                 <div
                                     className={`db-cl-av ${AV_CLASSES[i % AV_CLASSES.length]}`}
                                 >
-                                    {ini(p.name)}
+                                    {ini(p.patientName)}
                                 </div>
                                 <div className="db-cl-info">
-                                    <div className="db-cl-name">{p.name}</div>
-                                    <div className="db-cl-cond">
-                                        {p.condition || "General"}
+                                    <div className="db-cl-name">
+                                        {p.patientName}
                                     </div>
+                                    <div className="db-cl-cond">{p.date}</div>
                                 </div>
-                                <div className="db-cl-visits">
-                                    {p.visits ?? 0}× visits
+                                <div className="db-cl-visits text-t3 text-xs">
+                                    Last visit: Today
                                 </div>
                             </div>
                         ))}
                     </div>
 
                     <div className="db-card">
-                        <div className="db-card-title">Announcements</div>
-                        {announcements.map((a, i) => (
-                            <div key={i} className="db-ann-row">
-                                <div
-                                    className={`db-ann-dot db-ann-dot-${a.dot}`}
-                                />
-                                <div>
-                                    <div className="db-ann-text">{a.text}</div>
-                                    <div className="db-ann-date">{a.date}</div>
-                                </div>
-                            </div>
-                        ))}
+                        <div className="db-card-title">Smart Alerts</div>
+                        <SmartAlerts
+                            notifications={notifications}
+                            isLoading={isLoadingNotifications}
+                            error={notificationsError}
+                        />
                     </div>
                 </aside>
             </div>

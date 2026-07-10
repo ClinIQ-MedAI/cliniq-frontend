@@ -30,13 +30,10 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
             const user = response.data;
             console.log(user);
             loginData(user, user.token, data.email);
-            if (
-                user.role === "Admin" ||
-                data.email === import.meta.env.VITE_ADMIN_ACCOUNT
-            ) {
+            if (user.roles.length > 0 && user.roles.includes("Admin")) {
                 navigate("/admin/dashboard");
-            } else if (user.role === "Doctor") {
-                switch (user.doctorStatus) {
+            } else if (user.doctor) {
+                switch (user.doctor.status) {
                     case "INCOMPLETE_PROFILE":
                         navigate("/survey");
                         break;
