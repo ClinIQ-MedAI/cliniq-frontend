@@ -5,7 +5,6 @@ import api from "../apis/api";
 import API_ENDPOINTS from "../apis/endpoints";
 
 export const ForgotPasswordPage = () => {
-    // TODO: state, handleSubmit, loading, error, success... هتضيفهم انت
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 

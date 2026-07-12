@@ -190,7 +190,6 @@ export default function AppointmentsPage() {
                 { status: newStatus },
             );
         } catch (err) {
-            // TODO: surface an error toast / revert optimistic update
             console.error("Failed to update booking status", err);
             return;
         }

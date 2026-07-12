@@ -394,7 +394,6 @@ const ScanDetail = ({ scan, onBack, onReviewed }) => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
 
-    // TODO: confirm the real field name for the logged-in doctor's DoctorProfile.Id
     const doctorId = user?.id;
 
     const handleReview = async () => {
@@ -550,7 +549,6 @@ const PrescriptionDetail = ({ prescription, onBack, onConfirmed }) => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
 
-    // TODO: confirm the real field name for the logged-in doctor's DoctorProfile.Id
     const doctorId = user?.id;
 
     const handleConfirm = async () => {
