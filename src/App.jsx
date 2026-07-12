@@ -181,7 +181,7 @@ function App() {
                                 element={<Announcements />}
                             />
                             <Route
-                                path="/settings"
+                                path="/availability"
                                 element={<AvailabilityPage />}
                             />
                             <Route path="/profile" element={<Profile />} />

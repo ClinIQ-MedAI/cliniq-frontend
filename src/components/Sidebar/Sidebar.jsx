@@ -29,7 +29,7 @@ const NAV_MAIN = [
 ];
 
 const NAV_CONTENT = [
-    { to: "/settings", icon: "ti-clock", label: "Availability" },
+    { to: "/availability", icon: "ti-clock", label: "Availability" },
     { to: "/profile", icon: "ti-user-circle", label: "Profile" },
 ];
 
