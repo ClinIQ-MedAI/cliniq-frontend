@@ -44,7 +44,7 @@ export const ResetPasswordPage = () => {
                 newPassword: data.newPassword,
             });
             setSuccess(true);
-            setTimeout(() => navigate("/login"), 1500);
+            setTimeout(() => navigate("/"), 1500);
         } catch (err) {
             setError({
                 global:

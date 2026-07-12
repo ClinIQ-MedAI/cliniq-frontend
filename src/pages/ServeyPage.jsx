@@ -374,7 +374,7 @@ function FileUpload({ label, preview, onFileChange, onRemove, required }) {
                         onClick={onRemove}
                         className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
                     >
-                        <X size={14} className="text-white" />
+                        <X size={14} className="text-white shrink-0" />
                     </button>
                 </div>
             ) : (

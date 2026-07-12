@@ -5,6 +5,7 @@ import api from "../apis/api";
 import API_ENDPOINTS from "../apis/endpoints";
 
 export const ForgotPasswordPage = () => {
+    // TODO: state, handleSubmit, loading, error, success... هتضيفهم انت
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
@@ -14,7 +15,6 @@ export const ForgotPasswordPage = () => {
         e.preventDefault();
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData);
-        debugger;
         if (!data.email) {
             setError({ email: "email is required" });
             return;
