@@ -25,9 +25,7 @@ export const SignUpForm = ({ setOpenSignUpForm, setOpenLoginForm }) => {
 
     const password = watch("password");
 
-    //function for handing submitting the form to make an account
     async function handleSignUpSubmit(data) {
-        // send to api
         try {
             const response = await api.post(API_ENDPOINTS.Auth.signup, data);
 
@@ -84,7 +82,7 @@ export const SignUpForm = ({ setOpenSignUpForm, setOpenLoginForm }) => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             onClick={() => setOpenSignUpForm(false)}
-            className="fixed flex  z-100 justify-center items-center top-0 left-0 w-full h-full bg-[#00000094]"
+            className="fixed flex z-100 justify-center items-center top-0 left-0 w-full h-full bg-[#00000094] overflow-y-auto py-6 px-4"
         >
             <motion.form
                 onSubmit={handleSubmit(handleSignUpSubmit)}
@@ -98,17 +96,17 @@ export const SignUpForm = ({ setOpenSignUpForm, setOpenLoginForm }) => {
                     damping: 25,
                 }}
                 onClick={(e) => e.stopPropagation()}
-                className="flex mx-10  relative items-center text-(--default-color) rounded-xl overflow-hidden"
+                className="flex w-full max-w-7xl relative items-center text-(--default-color) rounded-xl overflow-hidden max-h-[90vh] overflow-y-auto my-auto"
             >
                 <div
-                    className="absolute right-2 top-2 cursor-pointer"
+                    className="absolute right-2 top-2 cursor-pointer z-10"
                     onClick={() => setOpenSignUpForm(false)}
                 >
                     <X className="text-red-500" />
                 </div>
-                <div className="flex w-7xl">
+                <div className="flex flex-col lg:flex-row w-full">
                     {/* Left */}
-                    <div className="bg-(--primary-color) text-xl hidden relative lg:block w-2/5 p-10 text-white">
+                    <div className="bg-(--primary-color) text-xl hidden relative lg:block w-2/5 p-6 sm:p-10 text-white">
                         <span className="font-bold">Hospital</span> logo
                         <img
                             src={Doctor1}
@@ -123,8 +121,8 @@ export const SignUpForm = ({ setOpenSignUpForm, setOpenLoginForm }) => {
                     </div>
 
                     {/* Right */}
-                    <div className="bg-(--white-color) p-10 w-full lg:w-3/5 sm:pb-15">
-                        <h2 className="text-(--default-color) text-3xl font-semibold">
+                    <div className="bg-(--white-color) p-6 sm:p-10 w-full lg:w-3/5 sm:pb-15">
+                        <h2 className="text-(--default-color) text-2xl sm:text-3xl font-semibold">
                             Sign up For account
                         </h2>
 
@@ -251,16 +249,17 @@ export const SignUpForm = ({ setOpenSignUpForm, setOpenLoginForm }) => {
                                     className="flex items-center gap-2"
                                 >
                                     <div
-                                        className={`w-8 h-8 flex justify-center items-center border rounded-sm ${checked ? "bg-(--primary-color)" : ""}`}
+                                        className={`w-8 h-8 shrink-0 flex justify-center items-center border rounded-sm ${checked ? "bg-(--primary-color)" : ""}`}
                                     >
                                         {checked && (
                                             <Check className="text-(--white-color)" />
                                         )}
                                     </div>
-                                    I accept all
-                                    <span className="text-(--primary-color)">
-                                        {" "}
-                                        terms and condition
+                                    <span className="flex flex-wrap items-center gap-1">
+                                        I accept all
+                                        <span className="text-(--primary-color)">
+                                            terms and condition
+                                        </span>
                                     </span>
                                 </label>
                                 {errors.checked && (
@@ -272,7 +271,7 @@ export const SignUpForm = ({ setOpenSignUpForm, setOpenLoginForm }) => {
                             <button
                                 type={"submit"}
                                 disabled={isSubmitting}
-                                className={`primary text-center md:mt-8 w-75 mx-auto justify-center rounded-lg border-2 border-(--primary-color) px-6 py-4 cursor-pointer gap-2 items-center flex disabled:bg-gray-500!`}
+                                className={`primary text-center md:mt-8 mt-6 w-full max-w-75 mx-auto justify-center rounded-lg border-2 border-(--primary-color) px-6 py-4 cursor-pointer gap-2 items-center flex disabled:bg-gray-500!`}
                             >
                                 Sign Up
                                 {isSubmitting && (
@@ -280,7 +279,7 @@ export const SignUpForm = ({ setOpenSignUpForm, setOpenLoginForm }) => {
                                 )}
                             </button>
 
-                            <p className="flex justify-center md:mt-20">
+                            <p className="flex flex-wrap justify-center gap-1 md:mt-20 mt-8">
                                 Already have an account ?{" "}
                                 <button
                                     type="button"

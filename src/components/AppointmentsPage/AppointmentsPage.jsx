@@ -36,11 +36,15 @@ const METRIC_COLORS = {
 
 function MetricCard({ value, label, color }) {
     return (
-        <div className="bg-subtle rounded-lg px-4 py-3">
-            <div className={`text-2xl font-medium ${METRIC_COLORS[color]}`}>
+        <div className="bg-subtle rounded-lg px-3 sm:px-4 py-2.5 sm:py-3">
+            <div
+                className={`text-xl sm:text-2xl font-medium ${METRIC_COLORS[color]}`}
+            >
                 {value}
             </div>
-            <div className="text-xs text-slate-500 mt-1">{label}</div>
+            <div className="text-[11px] sm:text-xs text-slate-500 mt-1">
+                {label}
+            </div>
         </div>
     );
 }
@@ -71,6 +75,53 @@ function formatDateTime(value) {
         day: "numeric",
         ...(hasTime && { hour: "numeric", minute: "2-digit" }),
     });
+}
+
+/* ---------- mobile card ---------- */
+function AppointmentCard({ appointment, onOpenDocuments, onAccept, onReject }) {
+    return (
+        <div className="px-4 py-3 border-b border-border-sub last:border-none">
+            <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-[#E6F1FB] text-[#0C447C] flex items-center justify-center text-xs font-medium shrink-0">
+                    {ini(appointment.patientName)}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="text-sm text-t1 font-medium truncate">
+                        {appointment.patientName ?? "—"}
+                    </div>
+                    <div className="text-xs text-t3 mt-0.5">
+                        {formatDateTime(appointment.date)}
+                    </div>
+                </div>
+                <StatusPill status={appointment.status} />
+            </div>
+
+            <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+                <button
+                    onClick={onOpenDocuments}
+                    className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#EEF3FB] text-[#185FA5] hover:bg-[#DCE9F7] transition-colors cursor-pointer"
+                >
+                    Documents
+                </button>
+                {appointment.status === "PENDING" && (
+                    <>
+                        <button
+                            onClick={onAccept}
+                            className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#E1F5EE] text-[#0F6E56] hover:bg-[#CFEEE3] transition-colors cursor-pointer"
+                        >
+                            Accept
+                        </button>
+                        <button
+                            onClick={onReject}
+                            className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#FCEBEB] text-[#A32D2D] hover:bg-[#F9D9D9] transition-colors cursor-pointer"
+                        >
+                            Reject
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
 }
 
 export default function AppointmentsPage() {
@@ -167,16 +218,18 @@ export default function AppointmentsPage() {
     );
 
     return (
-        <div className="flex flex-col gap-5 pb-8 px-5 pt-3">
+        <div className="flex flex-col gap-5 pb-8 px-4 sm:px-5 pt-3">
             <title>Appointments - ClinIQ</title>
             <div>
-                <h1 className="text-xl font-medium text-t1">Appointments</h1>
+                <h1 className="text-lg sm:text-xl font-medium text-t1">
+                    Appointments
+                </h1>
                 <p className="text-sm text-t2 mt-1">
                     All bookings made against your schedule
                 </p>
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
                 <MetricCard value={counts.total} label="Total" color="blue" />
                 <MetricCard
                     value={counts.pending}
@@ -206,7 +259,7 @@ export default function AppointmentsPage() {
                         className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-card text-t1 placeholder:text-t3 focus:outline-none focus:border-[#185FA5] transition-colors"
                     />
                 </div>
-                <div className="flex gap-1.5 flex-wrap">
+                <div className="flex gap-1.5 flex-wrap w-full sm:w-auto">
                     {FILTERS.map((f) => (
                         <button
                             key={f}
@@ -234,7 +287,7 @@ export default function AppointmentsPage() {
                         {loadError}
                     </div>
                 ) : slice.length === 0 ? (
-                    <div className="flex flex-col items-center gap-2 py-10 text-t2 text-sm">
+                    <div className="flex flex-col items-center gap-2 py-10 text-t2 text-sm px-4 text-center">
                         <Frown className="w-7 h-7" />
                         <p>No appointments match your search.</p>
                         <button
@@ -249,87 +302,116 @@ export default function AppointmentsPage() {
                         </button>
                     </div>
                 ) : (
-                    <table className="w-full text-sm border-collapse table-fixed">
-                        <colgroup>
-                            <col className="w-[32%]" />
-                            <col className="w-[28%]" />
-                            <col className="w-[18%]" />
-                            <col className="w-[22%]" />
-                        </colgroup>
-                        <thead>
-                            <tr className="bg-subtle border-b border-border-sub">
-                                {["Patient", "Date", "Status", "Actions"].map(
-                                    (h) => (
-                                        <th
-                                            key={h}
-                                            className="text-[11px] font-medium text-t3 px-3.5 py-2.5 text-left"
-                                        >
-                                            {h}
-                                        </th>
-                                    ),
-                                )}
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <>
+                        {/* Mobile: stacked cards */}
+                        <div className="md:hidden">
                             {slice.map((a) => (
-                                <tr
+                                <AppointmentCard
                                     key={a.id}
-                                    className="border-b border-border-sub last:border-none hover:bg-subtle transition-colors"
-                                >
-                                    <td className="px-3.5 py-2.5">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-7 h-7 rounded-full bg-[#E6F1FB] text-[#0C447C] flex items-center justify-center text-[11px] font-medium shrink-0">
-                                                {ini(a.patientName)}
-                                            </div>
-                                            <span className="text-t1">
-                                                {a.patientName ?? "—"}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="px-3.5 py-2.5 text-t2">
-                                        {formatDateTime(a.date)}
-                                    </td>
-                                    <td className="px-3.5 py-2.5">
-                                        <StatusPill status={a.status} />
-                                    </td>
-                                    <td className="px-3.5 py-2.5">
-                                        <div className="flex items-center gap-1.5">
-                                            <button
-                                                onClick={() =>
-                                                    navigate(
-                                                        `/patients/${a.patientId}/documents`,
-                                                    )
-                                                }
-                                                className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#EEF3FB] text-[#185FA5] hover:bg-[#DCE9F7] transition-colors cursor-pointer"
-                                            >
-                                                Documents
-                                            </button>
-                                            {a.status === "PENDING" && (
-                                                <>
-                                                    <button
-                                                        onClick={() =>
-                                                            handleAccept(a.id)
-                                                        }
-                                                        className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#E1F5EE] text-[#0F6E56] hover:bg-[#CFEEE3] transition-colors cursor-pointer"
-                                                    >
-                                                        Accept
-                                                    </button>
-                                                    <button
-                                                        onClick={() =>
-                                                            handleReject(a.id)
-                                                        }
-                                                        className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#FCEBEB] text-[#A32D2D] hover:bg-[#F9D9D9] transition-colors cursor-pointer"
-                                                    >
-                                                        Reject
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
+                                    appointment={a}
+                                    onOpenDocuments={() =>
+                                        navigate(
+                                            `/patients/${a.patientId}/documents`,
+                                        )
+                                    }
+                                    onAccept={() => handleAccept(a.id)}
+                                    onReject={() => handleReject(a.id)}
+                                />
                             ))}
-                        </tbody>
-                    </table>
+                        </div>
+
+                        {/* Desktop / tablet: table */}
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-sm border-collapse table-fixed min-w-[640px]">
+                                <colgroup>
+                                    <col className="w-[32%]" />
+                                    <col className="w-[28%]" />
+                                    <col className="w-[18%]" />
+                                    <col className="w-[22%]" />
+                                </colgroup>
+                                <thead>
+                                    <tr className="bg-subtle border-b border-border-sub">
+                                        {[
+                                            "Patient",
+                                            "Date",
+                                            "Status",
+                                            "Actions",
+                                        ].map((h) => (
+                                            <th
+                                                key={h}
+                                                className="text-[11px] font-medium text-t3 px-3.5 py-2.5 text-left"
+                                            >
+                                                {h}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {slice.map((a) => (
+                                        <tr
+                                            key={a.id}
+                                            className="border-b border-border-sub last:border-none hover:bg-subtle transition-colors"
+                                        >
+                                            <td className="px-3.5 py-2.5">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-7 h-7 rounded-full bg-[#E6F1FB] text-[#0C447C] flex items-center justify-center text-[11px] font-medium shrink-0">
+                                                        {ini(a.patientName)}
+                                                    </div>
+                                                    <span className="text-t1">
+                                                        {a.patientName ?? "—"}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-3.5 py-2.5 text-t2">
+                                                {formatDateTime(a.date)}
+                                            </td>
+                                            <td className="px-3.5 py-2.5">
+                                                <StatusPill status={a.status} />
+                                            </td>
+                                            <td className="px-3.5 py-2.5">
+                                                <div className="flex items-center gap-1.5">
+                                                    <button
+                                                        onClick={() =>
+                                                            navigate(
+                                                                `/patients/${a.patientId}/documents`,
+                                                            )
+                                                        }
+                                                        className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#EEF3FB] text-[#185FA5] hover:bg-[#DCE9F7] transition-colors cursor-pointer"
+                                                    >
+                                                        Documents
+                                                    </button>
+                                                    {a.status === "PENDING" && (
+                                                        <>
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleAccept(
+                                                                        a.id,
+                                                                    )
+                                                                }
+                                                                className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#E1F5EE] text-[#0F6E56] hover:bg-[#CFEEE3] transition-colors cursor-pointer"
+                                                            >
+                                                                Accept
+                                                            </button>
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleReject(
+                                                                        a.id,
+                                                                    )
+                                                                }
+                                                                className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#FCEBEB] text-[#A32D2D] hover:bg-[#F9D9D9] transition-colors cursor-pointer"
+                                                            >
+                                                                Reject
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
                 )}
 
                 {!isLoading && !loadError && filtered.length > 0 && (
@@ -337,7 +419,7 @@ export default function AppointmentsPage() {
                         <span className="text-xs text-t3">
                             Showing {start}–{end} of {filtered.length}
                         </span>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 flex-wrap">
                             <button
                                 onClick={() =>
                                     setPage((p) => Math.max(p - 1, 1))

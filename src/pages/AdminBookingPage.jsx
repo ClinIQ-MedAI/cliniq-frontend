@@ -11,6 +11,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import api from "../apis/api";
 import { toast } from "react-hot-toast";
 import API_ENDPOINTS from "../apis/endpoints";
+import { useUser } from "../contexts/UserContext";
 
 const STATUS_CONFIG = {
     PENDING: {
@@ -57,6 +58,8 @@ const formatDate = (iso) =>
 const PAGE_SIZE = 10;
 
 export const AdminBookings = () => {
+    const { hasPermission } = useUser();
+    const canUpdate = hasPermission("Permissions.Bookings.Update");
     const { toggle, theme } = useTheme();
 
     const [bookings, setBookings] = useState([]);
@@ -122,11 +125,13 @@ export const AdminBookings = () => {
             : bookings.filter((b) => b.status === statusFilter);
 
     return (
-        <div className="bg-page w-full px-5 py-2">
+        <div className="bg-page w-full px-4 sm:px-5 py-2 min-h-screen">
             {/* Header */}
             <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
                 <div>
-                    <h2 className="text-3xl font-bold text-t1">Bookings</h2>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-t1">
+                        Bookings
+                    </h2>
                     <p className="text-t2 mt-1">
                         View and manage all appointments across the clinic.
                     </p>
@@ -159,116 +164,127 @@ export const AdminBookings = () => {
 
             {/* Table */}
             <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-subtle text-t2 text-sm border-b border-border">
-                            <th className="p-4 font-medium">Patient</th>
-                            <th className="p-4 font-medium">Doctor</th>
-                            <th className="p-4 font-medium">Date</th>
-                            <th className="p-4 font-medium">Status</th>
-                            <th className="p-4 font-medium text-right">
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {isLoading ? (
-                            <tr>
-                                <td
-                                    colSpan="5"
-                                    className="py-12 text-center text-t3"
-                                >
-                                    <Loader2
-                                        size={24}
-                                        className="animate-spin mx-auto mb-2"
-                                        style={{ color: "#185FA5" }}
-                                    />
-                                    Loading bookings...
-                                </td>
+                <div className="overflow-x-auto">
+                    <table className="w-full min-w-[640px] text-left border-collapse">
+                        <thead>
+                            <tr className="bg-subtle text-t2 text-sm border-b border-border">
+                                <th className="p-4 font-medium">Patient</th>
+                                <th className="p-4 font-medium">Doctor</th>
+                                <th className="p-4 font-medium">Date</th>
+                                <th className="p-4 font-medium">Status</th>
+                                <th className="p-4 font-medium text-right">
+                                    Actions
+                                </th>
                             </tr>
-                        ) : error ? (
-                            <tr>
-                                <td
-                                    colSpan="5"
-                                    className="py-12 text-center text-red-600 text-sm"
-                                >
-                                    {error}
-                                </td>
-                            </tr>
-                        ) : visibleBookings.length === 0 ? (
-                            <tr>
-                                <td
-                                    colSpan="5"
-                                    className="py-12 text-center text-t3 text-sm"
-                                >
-                                    <Calendar
-                                        size={24}
-                                        className="mx-auto mb-2 text-t3"
-                                    />
-                                    No bookings found.
-                                </td>
-                            </tr>
-                        ) : (
-                            visibleBookings.map((booking) => (
-                                <tr
-                                    key={booking.id}
-                                    className="border-b border-border hover:bg-subtle transition-colors"
-                                >
-                                    <td className="p-4 font-medium text-t1">
-                                        {booking.patientName}
-                                    </td>
-                                    <td className="p-4 text-t2 text-sm">
-                                        {booking.doctorName}
-                                    </td>
-                                    <td className="p-4 text-t2 text-sm">
-                                        {formatDate(booking.date)}
-                                    </td>
-                                    <td className="p-4">
-                                        <StatusBadge status={booking.status} />
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center justify-end gap-2">
-                                            {updatingId === booking.id ? (
-                                                <Loader2
-                                                    size={16}
-                                                    className="animate-spin text-t3"
-                                                />
-                                            ) : (
-                                                <select
-                                                    value={booking.status}
-                                                    onChange={(e) =>
-                                                        handleStatusChange(
-                                                            booking.id,
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    className="px-2 py-1.5 bg-subtle border border-border rounded-lg text-t1 text-xs focus:outline-none focus:border-primary transition-colors"
-                                                >
-                                                    {STATUS_OPTIONS.map((s) => (
-                                                        <option
-                                                            key={s}
-                                                            value={s}
-                                                        >
-                                                            {
-                                                                STATUS_CONFIG[s]
-                                                                    .label
-                                                            }
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            )}
-                                        </div>
+                        </thead>
+                        <tbody>
+                            {isLoading ? (
+                                <tr>
+                                    <td
+                                        colSpan="5"
+                                        className="py-12 text-center text-t3"
+                                    >
+                                        <Loader2
+                                            size={24}
+                                            className="animate-spin mx-auto mb-2"
+                                            style={{ color: "#185FA5" }}
+                                        />
+                                        Loading bookings...
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ) : error ? (
+                                <tr>
+                                    <td
+                                        colSpan="5"
+                                        className="py-12 text-center text-red-600 text-sm"
+                                    >
+                                        {error}
+                                    </td>
+                                </tr>
+                            ) : visibleBookings.length === 0 ? (
+                                <tr>
+                                    <td
+                                        colSpan="5"
+                                        className="py-12 text-center text-t3 text-sm"
+                                    >
+                                        <Calendar
+                                            size={24}
+                                            className="mx-auto mb-2 text-t3"
+                                        />
+                                        No bookings found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                visibleBookings.map((booking) => (
+                                    <tr
+                                        key={booking.id}
+                                        className="border-b border-border hover:bg-subtle transition-colors"
+                                    >
+                                        <td className="p-4 font-medium text-t1">
+                                            {booking.patientName}
+                                        </td>
+                                        <td className="p-4 text-t2 text-sm">
+                                            {booking.doctorName}
+                                        </td>
+                                        <td className="p-4 text-t2 text-sm">
+                                            {formatDate(booking.date)}
+                                        </td>
+                                        <td className="p-4">
+                                            <StatusBadge
+                                                status={booking.status}
+                                            />
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center justify-end gap-2">
+                                                {updatingId === booking.id ? (
+                                                    <Loader2
+                                                        size={16}
+                                                        className="animate-spin text-t3"
+                                                    />
+                                                ) : canUpdate ? (
+                                                    <select
+                                                        value={booking.status}
+                                                        onChange={(e) =>
+                                                            handleStatusChange(
+                                                                booking.id,
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className="px-2 py-1.5 bg-subtle border border-border rounded-lg text-t1 text-xs focus:outline-none focus:border-primary transition-colors"
+                                                    >
+                                                        {STATUS_OPTIONS.map(
+                                                            (s) => (
+                                                                <option
+                                                                    key={s}
+                                                                    value={s}
+                                                                >
+                                                                    {
+                                                                        STATUS_CONFIG[
+                                                                            s
+                                                                        ].label
+                                                                    }
+                                                                </option>
+                                                            ),
+                                                        )}
+                                                    </select>
+                                                ) : (
+                                                    <StatusBadge
+                                                        status={booking.status}
+                                                    />
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {/* Pagination */}
             {!isLoading && !error && total > 0 && (
-                <div className="flex items-center justify-between mt-4 text-sm text-t2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4 text-sm text-t2">
                     <span>
                         Page {page} of {totalPages} · {total} total bookings
                     </span>

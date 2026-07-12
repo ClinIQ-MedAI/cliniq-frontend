@@ -190,7 +190,8 @@ export const DashboardPage = ({
                 paragraph={"Well  qualified doctors are ready to serve you"}
             >
                 <div className="">
-                    <div className=" grid md:grid-cols-2 xl:grid-cols-[400px_400px] gap-20 justify-center">
+                    <div className="grid md:grid-cols-2 gap-6 md:gap-10 xl:gap-20 justify-center max-w-4xl mx-auto">
+                        {" "}
                         {DoctorArray.map((doc) => (
                             <DoctorCard
                                 key={doc.name}
@@ -220,7 +221,7 @@ export const DashboardPage = ({
                     onClick={handlePrev}
                     initial={{ translateY: 0, scale: 1 }}
                     whileHover={{ translateY: "-5px", scale: 1.1 }}
-                    className="size-10 flex justify-center z-10 items-center bg-(--primary-color) text-white rounded-full shadow-lg cursor-pointer  absolute -left-5 top-1/2 -translate-y-1/2"
+                    className="size-8 sm:size-10 flex justify-center z-10 items-center bg-(--primary-color) text-white rounded-full shadow-lg cursor-pointer absolute -left-2 sm:-left-5 top-1/2 -translate-y-1/2"
                 >
                     <ChevronLeft />
                 </motion.button>
@@ -258,7 +259,7 @@ export const DashboardPage = ({
                     onClick={handleNext}
                     initial={{ translateY: 0, scale: 1 }}
                     whileHover={{ translateY: "-5px", scale: 1.1 }}
-                    className="size-10 flex justify-center z-10 items-center bg-(--primary-color) text-white rounded-full shadow-lg cursor-pointer absolute -right-5 top-1/2 -translate-y-1/2"
+                    className="size-8 sm:size-10 flex justify-center z-10 items-center bg-(--primary-color) text-white rounded-full shadow-lg cursor-pointer absolute -right-2 sm:-right-5 top-1/2 -translate-y-1/2"
                 >
                     <ChevronRight />
                 </motion.button>

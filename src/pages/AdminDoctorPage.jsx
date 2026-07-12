@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import api from "../apis/api";
 import { toast } from "react-hot-toast";
 import API_ENDPOINTS from "../apis/endpoints";
+import { useUser } from "../contexts/UserContext.jsx";
 
 const STATUS_CONFIG = {
     ACTIVE: {
@@ -68,7 +69,7 @@ const RejectModal = ({ doctor, onConfirm, onClose }) => {
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
             onClick={onClose}
         >
             <div
@@ -92,7 +93,7 @@ const RejectModal = ({ doctor, onConfirm, onClose }) => {
                     placeholder="e.g. License photo was unclear..."
                     className="w-full px-4 py-3 rounded-xl border-2 border-border text-sm text-t1 bg-page focus:outline-none focus:border-red-400 transition-colors resize-none"
                 />
-                <div className="flex gap-3 mt-4">
+                <div className="flex flex-col sm:flex-row gap-3 mt-4">
                     <button
                         onClick={onClose}
                         className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-t2 bg-subtle border border-border hover:bg-card transition-colors"
@@ -119,14 +120,16 @@ const RejectModal = ({ doctor, onConfirm, onClose }) => {
 
 /* ── Main component ── */
 export const AdminDoctors = () => {
+    const { hasPermission } = useUser();
+    const canUpdate = hasPermission("Permissions.Doctors.Update");
     const { toggle, theme } = useTheme();
     /** @type {[import('../types.js').DoctorResponse[], Function]} */
     const [doctors, setDoctors] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchInput, setSearchInput] = useState("");
     const [filterInput, setFilterInput] = useState("all");
-    const [rejectTarget, setRejectTarget] = useState(null); // doctor to reject
-    const [loadingId, setLoadingId] = useState(null); // which doctor's action is loading
+    const [rejectTarget, setRejectTarget] = useState(null);
+    const [loadingId, setLoadingId] = useState(null);
 
     useEffect(() => {
         fetchDoctors();
@@ -181,7 +184,7 @@ export const AdminDoctors = () => {
     const handleToggleSuspend = async (doctor) => {
         setLoadingId(doctor.id);
         try {
-            if (doctor.isDisabled) {
+            if (doctor.isDisabled || doctor.status === "SUSPENDED") {
                 await api.put(
                     API_ENDPOINTS.Admin.Doctor.unlockDoctor(doctor.id),
                 );
@@ -235,11 +238,11 @@ export const AdminDoctors = () => {
     });
 
     return (
-        <div className="bg-page w-full px-5 py-2">
+        <div className="bg-page w-full min-h-screen px-4 sm:px-5 py-2">
             {/* Header */}
             <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
                 <div>
-                    <h2 className="text-3xl font-bold text-t1">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-t1">
                         Doctors Directory
                     </h2>
                     <p className="text-t2 mt-1">
@@ -287,139 +290,181 @@ export const AdminDoctors = () => {
 
             {/* Table */}
             <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-subtle text-t2 text-sm border-b border-border">
-                            <th className="p-4 font-medium">Doctor Name</th>
-                            <th className="p-4 font-medium">Email</th>
-                            <th className="p-4 font-medium">Status</th>
-                            <th className="p-4 font-medium text-right">
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {isLoading ? (
-                            <tr>
-                                <td
-                                    colSpan="4"
-                                    className="py-12 text-center text-t3"
-                                >
-                                    <Loader2
-                                        size={24}
-                                        className="animate-spin mx-auto mb-2"
-                                        style={{ color: "#185FA5" }}
-                                    />
-                                    Loading doctors...
-                                </td>
+                <div className="overflow-x-auto">
+                    <table className="w-full min-w-[720px] text-left border-collapse">
+                        <thead>
+                            <tr className="bg-subtle text-t2 text-sm border-b border-border">
+                                <th className="p-4 font-medium">Doctor Name</th>
+                                <th className="p-4 font-medium">Email</th>
+                                <th className="p-4 font-medium">Status</th>
+                                <th className="p-4 font-medium text-right">
+                                    Actions
+                                </th>
                             </tr>
-                        ) : filteredDoctors.length === 0 ? (
-                            <tr>
-                                <td
-                                    colSpan="4"
-                                    className="py-12 text-center text-t3 text-sm"
-                                >
-                                    No doctors found.
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredDoctors.map((doctor) => (
-                                <tr
-                                    key={doctor.id}
-                                    className="border-b border-border hover:bg-subtle transition-colors"
-                                >
-                                    <td className="p-4 font-medium text-t1">
-                                        {doctor.firstName} {doctor.lastName}
-                                    </td>
-                                    <td className="p-4 text-t2 text-sm">
-                                        {doctor.email}
-                                    </td>
-                                    <td className="p-4">
-                                        <StatusBadge status={doctor.status} />
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center justify-end gap-2">
-                                            {/* Approve / Reject — for PENDING only */}
-                                            {doctor.status ===
-                                                "PENDING_VERIFICATION" && (
-                                                <>
-                                                    <button
-                                                        onClick={() =>
-                                                            handleApprove(
-                                                                doctor.id,
-                                                            )
-                                                        }
-                                                        disabled={
-                                                            loadingId ===
-                                                            doctor.id
-                                                        }
-                                                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20 transition-colors disabled:opacity-50"
-                                                    >
-                                                        {loadingId ===
-                                                        doctor.id ? (
-                                                            <Loader2
-                                                                size={13}
-                                                                className="animate-spin"
-                                                            />
-                                                        ) : (
-                                                            <Check size={13} />
-                                                        )}
-                                                        Approve
-                                                    </button>
-                                                    <button
-                                                        onClick={() =>
-                                                            setRejectTarget(
-                                                                doctor,
-                                                            )
-                                                        }
-                                                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-colors"
-                                                    >
-                                                        <X size={13} /> Reject
-                                                    </button>
-                                                </>
-                                            )}
-
-                                            {/* Suspend / Unlock — for ACTIVE or SUSPENDED */}
-                                            {(doctor.status === "ACTIVE" ||
-                                                doctor.status ===
-                                                    "SUSPENDED") && (
-                                                <button
-                                                    onClick={() =>
-                                                        handleToggleSuspend(
-                                                            doctor,
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        loadingId === doctor.id
-                                                    }
-                                                    className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ${
-                                                        doctor.isDisabled
-                                                            ? "bg-primary/10 text-primary hover:bg-primary/20"
-                                                            : "bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20"
-                                                    }`}
-                                                >
-                                                    {loadingId === doctor.id ? (
-                                                        <Loader2
-                                                            size={13}
-                                                            className="animate-spin"
-                                                        />
-                                                    ) : doctor.isDisabled ? (
-                                                        <Unlock size={13} />
-                                                    ) : (
-                                                        <Lock size={13} />
-                                                    )}
-                                                    {doctor.isDisabled
-                                                        ? "Unlock"
-                                                        : "Suspend"}
-                                                </button>
-                                            )}
-                                        </div>
+                        </thead>
+                        <tbody>
+                            {isLoading ? (
+                                <tr>
+                                    <td
+                                        colSpan="4"
+                                        className="py-12 text-center text-t3"
+                                    >
+                                        <Loader2
+                                            size={24}
+                                            className="animate-spin mx-auto mb-2"
+                                            style={{ color: "#185FA5" }}
+                                        />
+                                        Loading doctors...
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ) : filteredDoctors.length === 0 ? (
+                                <tr>
+                                    <td
+                                        colSpan="4"
+                                        className="py-12 text-center text-t3 text-sm"
+                                    >
+                                        No doctors found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredDoctors.map((doctor) => (
+                                    <tr
+                                        key={doctor.id}
+                                        className="border-b border-border hover:bg-subtle transition-colors"
+                                    >
+                                        <td className="p-4 font-medium text-t1">
+                                            {doctor.firstName} {doctor.lastName}
+                                        </td>
+                                        <td className="p-4 text-t2 text-sm">
+                                            {doctor.email}
+                                        </td>
+                                        <td className="p-4">
+                                            <StatusBadge
+                                                status={doctor.status}
+                                            />
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center justify-end gap-2 flex-wrap">
+                                                {/* Approve / Reject — for PENDING only */}
+                                                {canUpdate && (
+                                                    <>
+                                                        {doctor.status ===
+                                                            "PENDING_VERIFICATION" && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() =>
+                                                                        handleApprove(
+                                                                            doctor.id,
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        loadingId ===
+                                                                        doctor.id
+                                                                    }
+                                                                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20 transition-colors disabled:opacity-50 whitespace-nowrap"
+                                                                >
+                                                                    {loadingId ===
+                                                                    doctor.id ? (
+                                                                        <Loader2
+                                                                            size={
+                                                                                13
+                                                                            }
+                                                                            className="animate-spin"
+                                                                        />
+                                                                    ) : (
+                                                                        <Check
+                                                                            size={
+                                                                                13
+                                                                            }
+                                                                        />
+                                                                    )}
+                                                                    Approve
+                                                                </button>
+                                                                <button
+                                                                    onClick={() =>
+                                                                        setRejectTarget(
+                                                                            doctor,
+                                                                        )
+                                                                    }
+                                                                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-colors whitespace-nowrap"
+                                                                >
+                                                                    <X
+                                                                        size={
+                                                                            13
+                                                                        }
+                                                                    />{" "}
+                                                                    Reject
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </>
+                                                )}
+
+                                                {/* Suspend / Unlock — for ACTIVE or SUSPENDED */}
+                                                {canUpdate && (
+                                                    <>
+                                                        {(doctor.status ===
+                                                            "ACTIVE" ||
+                                                            doctor.status ===
+                                                                "SUSPENDED") && (
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleToggleSuspend(
+                                                                        doctor,
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    loadingId ===
+                                                                    doctor.id
+                                                                }
+                                                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 whitespace-nowrap ${
+                                                                    doctor.isDisabled ||
+                                                                    doctor.status ===
+                                                                        "SUSPENDED"
+                                                                        ? "bg-primary/10 text-primary hover:bg-primary/20"
+                                                                        : "bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20"
+                                                                }`}
+                                                            >
+                                                                {loadingId ===
+                                                                doctor.id ? (
+                                                                    <Loader2
+                                                                        size={
+                                                                            13
+                                                                        }
+                                                                        className="animate-spin"
+                                                                    />
+                                                                ) : doctor.isDisabled ||
+                                                                  doctor.status ===
+                                                                      "SUSPENDED" ? (
+                                                                    <Unlock
+                                                                        size={
+                                                                            13
+                                                                        }
+                                                                    />
+                                                                ) : (
+                                                                    <Lock
+                                                                        size={
+                                                                            13
+                                                                        }
+                                                                    />
+                                                                )}
+                                                                {doctor.isDisabled ||
+                                                                doctor.status ===
+                                                                    "SUSPENDED"
+                                                                    ? "Unlock"
+                                                                    : "Suspend"}
+                                                            </button>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {/* Reject Modal */}

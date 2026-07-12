@@ -2,35 +2,57 @@ import React, { useEffect, useState } from "react";
 import { useUser } from "../../contexts/UserContext";
 import {
     Pencil,
-    MapPin,
-    Clock,
-    Award,
-    Stethoscope,
-    Briefcase,
     Check,
     X,
-    Camera,
-    GraduationCap,
-    Building2,
+    Stethoscope,
+    User,
+    Users,
+    ShieldCheck,
 } from "lucide-react";
 import api from "../../apis/api";
-import { User } from "lucide-react";
 import API_ENDPOINTS from "../../apis/endpoints";
-import { Users } from "lucide-react";
+
+// Matches Doctor.Profile's DoctorProfileResponse exactly:
+// (email, userName, firstName, lastName, specialization, licenseNumber,
+//  licenseExpiryDate, personalIdentityPhotoUrl, medicalLicenseUrl,
+//  rejectionReason, status)
+// Only firstName/lastName are ever written back — UpdateProfileAsync on the
+// backend ignores everything else, so this component only lets those two
+// fields be edited. Everything else below is read-only, sourced straight
+// from the GET response.
+
+const STATUS_META = {
+    PENDING_VERIFICATION: {
+        label: "Pending verification",
+        pill: "bg-[#FAEEDA] text-[#854F0B]",
+    },
+    VERIFIED: { label: "Verified", pill: "bg-[#E1F5EE] text-[#0F6E56]" },
+    REJECTED: { label: "Rejected", pill: "bg-[#FCEBEB] text-[#A32D2D]" },
+    INCOMPLETE_PROFILE: {
+        label: "Incomplete profile",
+        pill: "bg-subtle text-t2",
+    },
+};
 
 export default function Profile({ onUpdateDoctorInfo }) {
     const { user } = useUser();
     const [profile, setProfile] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
-    const [editForm, setEditForm] = useState({});
+    const [editForm, setEditForm] = useState({ firstName: "", lastName: "" });
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState("");
+    const [photoFailed, setPhotoFailed] = useState(false);
 
     useEffect(() => {
         async function fetchProfile() {
             try {
                 const res = await api.get(API_ENDPOINTS.Doctor.getOrUpdateMe);
                 setProfile(res.data);
-                setEditForm(res.data);
+                setEditForm({
+                    firstName: res.data.firstName ?? "",
+                    lastName: res.data.lastName ?? "",
+                });
             } catch (err) {
                 console.error("Failed to fetch profile", err);
             } finally {
@@ -40,48 +62,57 @@ export default function Profile({ onUpdateDoctorInfo }) {
         fetchProfile();
     }, []);
 
-    const handleEditClick = () => setIsEditing(true);
+    const handleEditClick = () => {
+        setSaveError("");
+        setIsEditing(true);
+    };
+
     const handleSaveClick = async () => {
         try {
-            const res = await api.put(
-                API_ENDPOINTS.Doctor.getOrUpdateMe,
-                editForm,
-            );
-            setProfile(res.data);
+            setSaving(true);
+            setSaveError("");
+            // Only firstName/lastName are sent — that's all the backend
+            // actually persists (see UpdateProfileAsync).
+            await api.put(API_ENDPOINTS.Doctor.getOrUpdateMe, {
+                firstName: editForm.firstName,
+                lastName: editForm.lastName,
+            });
+            setProfile((prev) => ({
+                ...prev,
+                firstName: editForm.firstName,
+                lastName: editForm.lastName,
+            }));
             setIsEditing(false);
             if (onUpdateDoctorInfo) {
                 onUpdateDoctorInfo({
-                    name: `${res.data.firstName} ${res.data.lastName}`,
-                    specialty: res.data.specialization,
+                    name: `${editForm.firstName} ${editForm.lastName}`,
+                    specialty: profile?.specialization,
                 });
             }
         } catch (err) {
-            console.error("Failed to update profile", err);
+            setSaveError(
+                err?.response?.data?.title ??
+                    err?.response?.data?.message ??
+                    "Failed to save changes",
+            );
+        } finally {
+            setSaving(false);
         }
     };
+
     const handleCancelClick = () => {
-        setEditForm({ ...profile });
+        setEditForm({
+            firstName: profile?.firstName ?? "",
+            lastName: profile?.lastName ?? "",
+        });
+        setSaveError("");
         setIsEditing(false);
     };
+
     const handleInputChange = (e) => {
         setEditForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     };
-    const handleSpecialtyChange = (index, value) => {
-        const updated = [...editForm.specialties];
-        updated[index] = value;
-        setEditForm((prev) => ({ ...prev, specialties: updated }));
-    };
-    const handleImageChange = (e) => {
-        if (e.target.files?.[0]) {
-            const reader = new FileReader();
-            reader.onload = (event) =>
-                setEditForm((prev) => ({
-                    ...prev,
-                    image: event.target.result,
-                }));
-            reader.readAsDataURL(e.target.files[0]);
-        }
-    };
+
     if (loading)
         return (
             <div className="flex items-center justify-center h-64 text-slate-400">
@@ -89,11 +120,12 @@ export default function Profile({ onUpdateDoctorInfo }) {
             </div>
         );
 
-    if (!profile) {
-        return null;
-    }
+    if (!profile) return null;
 
-    const displayData = isEditing ? editForm : profile;
+    const statusMeta = STATUS_META[profile.status] ?? {
+        label: profile.status ?? "Unknown",
+        pill: "bg-subtle text-t2",
+    };
 
     return (
         <div className="w-full bg-page p-6">
@@ -106,7 +138,6 @@ export default function Profile({ onUpdateDoctorInfo }) {
                         <h1 className="text-2xl font-bold text-t1">
                             My Profile
                         </h1>
-
                         <p className="text-sm text-t2 mt-1">
                             Logged in as{" "}
                             <span className="font-semibold text-t1">
@@ -125,20 +156,22 @@ export default function Profile({ onUpdateDoctorInfo }) {
                             }}
                         >
                             <Pencil size={15} />
-                            Edit Profile
+                            Edit Name
                         </button>
                     ) : (
                         <div className="flex gap-3">
                             <button
                                 onClick={handleSaveClick}
-                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-all duration-200 hover:-translate-y-0.5"
+                                disabled={saving}
+                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 <Check size={15} />
-                                Save Changes
+                                {saving ? "Saving..." : "Save Changes"}
                             </button>
                             <button
                                 onClick={handleCancelClick}
-                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-t2 bg-card border border-border hover:bg-subtle   transition-all duration-200"
+                                disabled={saving}
+                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-t2 bg-card border border-border hover:bg-subtle transition-all duration-200 disabled:opacity-60"
                             >
                                 <X size={15} />
                                 Cancel
@@ -146,6 +179,12 @@ export default function Profile({ onUpdateDoctorInfo }) {
                         </div>
                     )}
                 </div>
+
+                {saveError && (
+                    <div className="mb-4 px-4 py-2.5 rounded-xl bg-[#FCEBEB] text-[#A32D2D] text-sm">
+                        {saveError}
+                    </div>
+                )}
 
                 {/* Main card */}
                 <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden flex flex-col lg:flex-row">
@@ -157,124 +196,59 @@ export default function Profile({ onUpdateDoctorInfo }) {
                                 "linear-gradient(160deg, #0B1629 0%, #185FA5 100%)",
                         }}
                     >
-                        {/* Available badge */}
-                        <span className="absolute top-5 left-5 flex items-center gap-1.5 text-xs font-medium bg-white/10 text-emerald-300 border border-emerald-400/30 rounded-full px-3 py-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            Available
+                        <span
+                            className={`absolute top-5 left-5 flex items-center gap-1.5 text-xs font-medium rounded-full px-3 py-1 ${
+                                profile.status === "VERIFIED"
+                                    ? "bg-white/10 text-emerald-300 border border-emerald-400/30"
+                                    : "bg-white/10 text-white/80 border border-white/20"
+                            }`}
+                        >
+                            {profile.status === "VERIFIED" && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            )}
+                            {statusMeta.label}
                         </span>
 
-                        {/* Photo */}
+                        {/* Photo — display only, no upload endpoint exists yet */}
                         <div className="relative mt-4 mb-5">
-                            {displayData.image ? (
+                            {profile.personalIdentityPhotoUrl &&
+                            !photoFailed ? (
                                 <img
-                                    src={displayData.image}
-                                    alt={displayData.name}
+                                    src={profile.personalIdentityPhotoUrl}
+                                    alt={`${profile.firstName} ${profile.lastName}`}
+                                    onError={() => setPhotoFailed(true)}
                                     className="w-36 h-36 rounded-full object-cover border-4 border-white/20 shadow-2xl"
                                 />
                             ) : (
-                                <div className="w-36 h-36 rounded-full text-t2 object-cover flex justify-center items-center border-4 border-white/20 shadow-2xl">
+                                <div className="w-36 h-36 rounded-full text-white/60 object-cover flex justify-center items-center border-4 border-white/20 shadow-2xl">
                                     <Users size={50} />
                                 </div>
                             )}
-                            {isEditing && (
-                                <label className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-white flex items-center justify-center cursor-pointer shadow-md hover:scale-105 transition-transform">
-                                    <Camera
-                                        size={16}
-                                        className="text-slate-700"
-                                    />
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageChange}
-                                        className="hidden"
-                                    />
-                                </label>
-                            )}
                         </div>
 
-                        {/* Name */}
-                        {/* {isEditing ? (
-                            <input
-                                type="text"
-                                name="name"
-                                value={editForm.name}
-                                onChange={handleInputChange}
-                                className="w-full text-center text-lg font-bold bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:border-white/50 mb-1"
-                            />
-                        ) : (
-                            <h2 className="text-xl font-bold text-center leading-tight mb-1">
-                                {profile?.firstName}
-                            </h2>
-                        )} */}
-
-                        {/* Specialty tag */}
-                        {/* {isEditing ? (
-                            <input
-                                type="text"
-                                name="specialty"
-                                value={editForm.specialty}
-                                onChange={handleInputChange}
-                                className="w-full text-center text-sm bg-white/10 border border-white/20 rounded-xl px-3 py-1.5 text-white/80 placeholder-white/40 focus:outline-none focus:border-white/50 mt-1 mb-5"
-                            />
-                        ) : (
-                            <span className="text-sm font-medium text-blue-200 mb-5">
-                                {profile.specialty}
+                        <h2 className="text-xl font-bold text-center leading-tight mb-1">
+                            {profile.firstName} {profile.lastName}
+                        </h2>
+                        {profile.specialization && (
+                            <span className="text-sm font-medium text-blue-200">
+                                {profile.specialization}
                             </span>
-                        )} */}
+                        )}
 
-                        {/* Quick-info pills */}
-                        {/* <div className="w-full space-y-3 mt-2">
-                            <InfoPill
-                                icon={<Building2 size={14} />}
-                                label={displayData.hospital}
-                                editing={isEditing}
-                            >
-                                {isEditing && (
-                                    <input
-                                        type="text"
-                                        name="hospital"
-                                        value={editForm.hospital}
-                                        onChange={handleInputChange}
-                                        className="flex-1 bg-transparent border-b border-white/30 text-white text-sm focus:outline-none focus:border-white/70 pb-0.5"
-                                    />
-                                )}
-                            </InfoPill>
-                            <InfoPill
-                                icon={<MapPin size={14} />}
-                                label={displayData.location}
-                                editing={isEditing}
-                            >
-                                {isEditing && (
-                                    <input
-                                        type="text"
-                                        name="location"
-                                        value={editForm.location}
-                                        onChange={handleInputChange}
-                                        className="flex-1 bg-transparent border-b border-white/30 text-white text-sm focus:outline-none focus:border-white/70 pb-0.5"
-                                    />
-                                )}
-                            </InfoPill>
-                            <InfoPill
-                                icon={<GraduationCap size={14} />}
-                                label={displayData.degree}
-                                editing={isEditing}
-                            >
-                                {isEditing && (
-                                    <input
-                                        type="text"
-                                        name="degree"
-                                        value={editForm.degree}
-                                        onChange={handleInputChange}
-                                        className="flex-1 bg-transparent border-b border-white/30 text-white text-sm focus:outline-none focus:border-white/70 pb-0.5"
-                                    />
-                                )}
-                            </InfoPill>
-                        </div> */}
+                        {profile.status === "REJECTED" &&
+                            profile.rejectionReason && (
+                                <div className="mt-5 w-full text-xs bg-white/10 border border-white/20 rounded-xl px-3 py-2.5 text-white/80">
+                                    <span className="font-semibold block mb-1">
+                                        Rejection reason
+                                    </span>
+                                    {profile.rejectionReason}
+                                </div>
+                            )}
                     </div>
 
                     {/* ── RIGHT: Detail Panel ── */}
                     <div className="flex-1 p-8 space-y-8">
-                        {/* Personal Info */}
+                        {/* Personal Info — the only editable section */}
                         <Section
                             icon={<User size={16} />}
                             title="Personal Information"
@@ -304,34 +278,21 @@ export default function Profile({ onUpdateDoctorInfo }) {
                                 />
                                 <Field
                                     label="Email Address"
-                                    name="email"
-                                    value={
-                                        isEditing
-                                            ? editForm.email
-                                            : profile.email
-                                    }
-                                    editing={isEditing}
-                                    onChange={handleInputChange}
-                                    type="email"
+                                    value={profile.email}
+                                    readOnlyNote="Managed via account settings"
                                 />
                                 <Field
-                                    label="Date of Birth"
-                                    name="dateOfBirth"
-                                    value={
-                                        isEditing
-                                            ? editForm.dateOfBirth
-                                            : profile.dateOfBirth
-                                    }
-                                    editing={isEditing}
-                                    onChange={handleInputChange}
-                                    type="date"
+                                    label="Username"
+                                    value={profile.userName}
+                                    readOnlyNote="Managed via account settings"
                                 />
                             </div>
                         </Section>
 
                         <Divider />
 
-                        {/* Professional Info */}
+                        {/* Professional Info — read only, backend has no
+                            update path for these fields */}
                         <Section
                             icon={<Stethoscope size={16} />}
                             title="Professional Information"
@@ -339,155 +300,38 @@ export default function Profile({ onUpdateDoctorInfo }) {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <Field
                                     label="Specialization"
-                                    name="specialization"
-                                    value={
-                                        isEditing
-                                            ? editForm.specialization
-                                            : profile.specialization
-                                    }
-                                    editing={isEditing}
-                                    onChange={handleInputChange}
+                                    value={profile.specialization}
+                                    readOnlyNote="Set during verification"
                                 />
                                 <Field
                                     label="License Number"
-                                    name="licenseNumber"
-                                    value={
-                                        isEditing
-                                            ? editForm.licenseNumber
-                                            : profile.licenseNumber
-                                    }
-                                    editing={isEditing}
-                                    onChange={handleInputChange}
+                                    value={profile.licenseNumber}
+                                    readOnlyNote="Set during verification"
                                 />
                                 <Field
                                     label="License Expiry Date"
-                                    name="licenseExpiryDate"
                                     value={
-                                        isEditing
-                                            ? editForm.licenseExpiryDate
-                                            : profile.licenseExpiryDate
+                                        profile.licenseExpiryDate
+                                            ? new Date(
+                                                  profile.licenseExpiryDate,
+                                              ).toLocaleDateString()
+                                            : null
                                     }
-                                    editing={isEditing}
-                                    onChange={handleInputChange}
-                                    type="date"
+                                    readOnlyNote="Set during verification"
                                 />
-                            </div>
-                        </Section>
-                        {/* Specialties */}
-                        {/* <Section
-                            icon={<Stethoscope size={16} />}
-                            title="Specialties"
-                        >
-                            {isEditing ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {editForm?.specialties?.map((spec, i) => (
-                                        <input
-                                            key={i}
-                                            type="text"
-                                            value={spec}
-                                            onChange={(e) =>
-                                                handleSpecialtyChange(
-                                                    i,
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="px-4 py-2.5 rounded-xl border-2 border-border text-sm text-t1 bg-card focus:outline-none focus:border-blue-400 transition-colors"
-                                            placeholder={`Specialty ${i + 1}`}
-                                        />
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {profile?.specialties?.map((spec, i) => (
-                                        <div
-                                            key={i}
-                                            className="flex items-center gap-3 px-4 py-3 rounded-xl bg-subtle border border-border"
-                                        >
-                                            <span
-                                                className="w-2 h-2 rounded-full flex-shrink-0"
-                                                style={{
-                                                    background: "#185FA5",
-                                                }}
-                                            />
-                                            <span className="text-sm font-medium text-t1">
-                                                {spec}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </Section> */}
-
-                        {/* <Divider /> */}
-
-                        {/* Experience + Hours row */}
-                        {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <Section
-                                icon={<Briefcase size={16} />}
-                                title="Experience"
-                            >
-                                {isEditing ? (
-                                    <input
-                                        type="text"
-                                        name="experience"
-                                        value={editForm.experience}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 text-sm text-slate-700 focus:outline-none focus:border-blue-400 transition-colors"
-                                    />
-                                ) : (
-                                    <p className="text-3xl font-bold text-t1 mt-1">
-                                        {profile.experience}
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-widest text-t3 mb-2">
+                                        Verification Status
                                     </p>
-                                )}
-                            </Section>
-
-                            <Section
-                                icon={<Clock size={16} />}
-                                title="Opening Hours"
-                            >
-                                {isEditing ? (
-                                    <input
-                                        type="text"
-                                        name="workingHours"
-                                        value={editForm.workingHours}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 text-sm text-slate-700 focus:outline-none focus:border-blue-400 transition-colors"
-                                    />
-                                ) : (
-                                    <p className="text-sm font-medium text-t2 mt-1 leading-relaxed">
-                                        {profile.workingHours}
-                                    </p>
-                                )}
-                            </Section>
-                        </div> */}
-
-                        {/* <Divider /> */}
-
-                        {/* Awards */}
-                        {/* <Section
-                            icon={<Award size={16} />}
-                            title="Awards & Recognition"
-                        >
-                            {isEditing ? (
-                                <input
-                                    type="text"
-                                    name="awards"
-                                    value={editForm.awards}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-2.5 rounded-xl border-2 border-border text-sm text-slate-700 focus:outline-none focus:border-blue-400 transition-colors"
-                                />
-                            ) : (
-                                <div className="flex items-start gap-3 p-4 rounded-xl bg-subtle border border-border">
-                                    <Award
-                                        size={18}
-                                        className="text-amber-500 flex-shrink-0 mt-0.5"
-                                    />
-                                    <span className="text-sm font-medium text-t1">
-                                        {profile.awards}
+                                    <span
+                                        className={`inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl ${statusMeta.pill}`}
+                                    >
+                                        <ShieldCheck size={14} />
+                                        {statusMeta.label}
                                     </span>
                                 </div>
-                            )}
-                        </Section> */}
+                            </div>
+                        </Section>
                     </div>
                 </div>
             </div>
@@ -515,19 +359,19 @@ function Divider() {
     return <hr className="border-border" />;
 }
 
-function InfoPill({ icon, label, editing, children }) {
-    return (
-        <div className="flex items-center gap-3 text-white/70">
-            <span className="text-white/50 shrink-0">{icon}</span>
-            {editing ? (
-                children
-            ) : (
-                <span className="text-sm leading-snug">{label}</span>
-            )}
-        </div>
-    );
-}
-function Field({ label, name, value, editing, onChange, type = "text" }) {
+// `editing` + `onChange`/`name` together make this an editable input.
+// Omit those and pass `readOnlyNote` for fields the backend doesn't accept
+// updates for — they render as plain, slightly muted display boxes so it's
+// visually clear they can't be changed here.
+function Field({
+    label,
+    name,
+    value,
+    editing = false,
+    onChange,
+    type = "text",
+    readOnlyNote,
+}) {
     return (
         <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-t3 mb-2">
@@ -542,9 +386,16 @@ function Field({ label, name, value, editing, onChange, type = "text" }) {
                     className="w-full px-4 py-2.5 rounded-xl border-2 border-border text-sm text-t1 bg-card focus:outline-none focus:border-blue-400 transition-colors"
                 />
             ) : (
-                <p className="text-sm font-medium text-t1 px-4 py-2.5 rounded-xl bg-subtle border border-border">
-                    {value ?? "—"}
-                </p>
+                <>
+                    <p className="text-sm font-medium text-t1 px-4 py-2.5 rounded-xl bg-subtle border border-border">
+                        {value ?? "—"}
+                    </p>
+                    {readOnlyNote && (
+                        <p className="text-[11px] text-t3 mt-1">
+                            {readOnlyNote}
+                        </p>
+                    )}
+                </>
             )}
         </div>
     );

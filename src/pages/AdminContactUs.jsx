@@ -9,6 +9,7 @@ import {
     MessageSquare,
     X,
     Send,
+    CheckCircle2,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import api from "../apis/api";
@@ -49,8 +50,23 @@ const formatDate = (iso) =>
         : "—";
 
 /* ── Message detail modal ── */
-const MessageModal = ({ message, onClose }) => {
-    const [reply, setReply] = useState("");
+const MessageModal = ({ message, onClose, onReply }) => {
+    const [reply, setReply] = useState(message.adminReply ?? "");
+    const [isSending, setIsSending] = useState(false);
+    const alreadyReplied = Boolean(message.isReplied);
+
+    const handleSend = async () => {
+        if (!reply.trim()) {
+            toast.error("Please write a reply before sending.");
+            return;
+        }
+        setIsSending(true);
+        try {
+            await onReply(message.id, reply.trim());
+        } finally {
+            setIsSending(false);
+        }
+    };
 
     return (
         <div
@@ -58,15 +74,15 @@ const MessageModal = ({ message, onClose }) => {
             onClick={onClose}
         >
             <div
-                className="bg-card border border-border rounded-2xl p-6 w-full max-w-lg shadow-xl"
+                className="bg-card border border-border rounded-2xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="flex items-start justify-between mb-4">
-                    <div>
-                        <h3 className="text-lg font-bold text-t1">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="min-w-0">
+                        <h3 className="text-lg font-bold text-t1 break-words">
                             {message.subject}
                         </h3>
-                        <p className="text-sm text-t2 mt-0.5">
+                        <p className="text-sm text-t2 mt-0.5 break-words">
                             {message.name} · {message.email}
                             {message.phone ? ` · ${message.phone}` : ""}
                         </p>
@@ -76,7 +92,7 @@ const MessageModal = ({ message, onClose }) => {
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-1.5 text-t3 hover:text-t1 hover:bg-subtle rounded-full transition-colors"
+                        className="p-1.5 text-t3 hover:text-t1 hover:bg-subtle rounded-full transition-colors shrink-0"
                     >
                         <X size={18} />
                     </button>
@@ -87,25 +103,43 @@ const MessageModal = ({ message, onClose }) => {
                 </div>
 
                 <div>
-                    <label className="text-xs font-medium text-t2 mb-1.5 block">
-                        Reply
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-xs font-medium text-t2 block">
+                            {alreadyReplied ? "Your reply" : "Reply"}
+                        </label>
+                        {alreadyReplied && (
+                            <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-medium">
+                                <CheckCircle2 size={13} />
+                                Sent
+                            </span>
+                        )}
+                    </div>
                     <textarea
                         value={reply}
                         onChange={(e) => setReply(e.target.value)}
                         rows={3}
-                        disabled
-                        placeholder="Reply functionality is not available yet — backend endpoint pending."
-                        className="w-full px-4 py-3 rounded-xl border-2 border-border text-sm text-t1 bg-page focus:outline-none resize-none opacity-60 cursor-not-allowed"
+                        disabled={isSending || alreadyReplied}
+                        placeholder="Write your reply to this message..."
+                        className={`w-full px-4 py-3 rounded-xl border-2 border-border text-sm text-t1 bg-page focus:outline-none focus:border-primary transition-colors resize-none ${
+                            alreadyReplied
+                                ? "opacity-70 cursor-not-allowed"
+                                : ""
+                        }`}
                     />
-                    <button
-                        disabled
-                        title="Waiting on backend reply endpoint"
-                        className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-primary opacity-50 cursor-not-allowed"
-                    >
-                        <Send size={15} />
-                        Send Reply
-                    </button>
+                    {!alreadyReplied && (
+                        <button
+                            onClick={handleSend}
+                            disabled={isSending}
+                            className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-primary hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                            {isSending ? (
+                                <Loader2 size={15} className="animate-spin" />
+                            ) : (
+                                <Send size={15} />
+                            )}
+                            Send Reply
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
@@ -136,7 +170,6 @@ export const AdminContactUs = () => {
             const res = await api.get(
                 API_ENDPOINTS.Admin.Contact.getAllMessages,
             );
-            // Adjust this mapping if the backend wraps the array (e.g. res.data.data)
             setMessages(res.data ?? []);
         } catch (err) {
             setError(
@@ -170,6 +203,35 @@ export const AdminContactUs = () => {
         }
     };
 
+    const handleReply = async (id, replyText) => {
+        try {
+            await api.post(API_ENDPOINTS.Admin.Contact.reply(id), {
+                contactId: id,
+                reply: replyText,
+            });
+
+            setMessages((prev) =>
+                prev.map((m) =>
+                    m.id === id
+                        ? { ...m, isReplied: true, adminReply: replyText }
+                        : m,
+                ),
+            );
+            setSelectedMessage((prev) =>
+                prev && prev.id === id
+                    ? { ...prev, isReplied: true, adminReply: replyText }
+                    : prev,
+            );
+            toast.success("Reply sent.");
+        } catch (err) {
+            toast.error(
+                err?.response?.data?.title ??
+                    err?.response?.data?.message ??
+                    "Failed to send reply.",
+            );
+        }
+    };
+
     const filteredMessages = messages.filter((m) => {
         const matchesSearch =
             searchInput === "" ||
@@ -188,11 +250,11 @@ export const AdminContactUs = () => {
     const unreadCount = messages.filter((m) => !m.isRead).length;
 
     return (
-        <div className="bg-page w-full px-5 py-2">
+        <div className="bg-page w-full px-4 sm:px-5 py-2 min-h-screen">
             {/* Header */}
             <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
                 <div>
-                    <h2 className="text-3xl font-bold text-t1">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-t1">
                         Contact Messages
                     </h2>
                     <p className="text-t2 mt-1">
@@ -245,107 +307,119 @@ export const AdminContactUs = () => {
 
             {/* Table */}
             <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-subtle text-t2 text-sm border-b border-border">
-                            <th className="p-4 font-medium">Sender</th>
-                            <th className="p-4 font-medium">Subject</th>
-                            <th className="p-4 font-medium">Message</th>
-                            <th className="p-4 font-medium">Date</th>
-                            <th className="p-4 font-medium">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {isLoading ? (
-                            <tr>
-                                <td
-                                    colSpan="5"
-                                    className="py-12 text-center text-t3"
-                                >
-                                    <Loader2
-                                        size={24}
-                                        className="animate-spin mx-auto mb-2"
-                                        style={{ color: "#185FA5" }}
-                                    />
-                                    Loading messages...
-                                </td>
+                <div className="overflow-x-auto">
+                    <table className="w-full min-w-[720px] text-left border-collapse">
+                        <thead>
+                            <tr className="bg-subtle text-t2 text-sm border-b border-border">
+                                <th className="p-4 font-medium">Sender</th>
+                                <th className="p-4 font-medium">Subject</th>
+                                <th className="p-4 font-medium">Message</th>
+                                <th className="p-4 font-medium">Date</th>
+                                <th className="p-4 font-medium">Status</th>
                             </tr>
-                        ) : error ? (
-                            <tr>
-                                <td
-                                    colSpan="5"
-                                    className="py-12 text-center text-red-600 text-sm"
-                                >
-                                    {error}
-                                </td>
-                            </tr>
-                        ) : filteredMessages.length === 0 ? (
-                            <tr>
-                                <td
-                                    colSpan="5"
-                                    className="py-12 text-center text-t3 text-sm"
-                                >
-                                    <MessageSquare
-                                        size={24}
-                                        className="mx-auto mb-2 text-t3"
-                                    />
-                                    No messages found.
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredMessages.map((message) => (
-                                <tr
-                                    key={message.id}
-                                    onClick={() => handleOpenMessage(message)}
-                                    className={`border-b border-border hover:bg-subtle transition-colors cursor-pointer ${
-                                        !message.isRead ? "font-medium" : ""
-                                    }`}
-                                >
-                                    <td className="p-4 text-t1">
-                                        <div className="flex flex-col">
-                                            <span>{message.name}</span>
-                                            <span className="text-xs text-t3 font-normal">
-                                                {message.email}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-t1 text-sm">
-                                        {message.subject}
-                                    </td>
-                                    <td className="p-4 text-t2 text-sm max-w-xs truncate">
-                                        {message.message}
-                                    </td>
-                                    <td className="p-4 text-t2 text-sm whitespace-nowrap">
-                                        {formatDate(message.createdAt)}
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-2">
-                                            {markingId === message.id ? (
-                                                <Loader2
-                                                    size={16}
-                                                    className="animate-spin text-t3"
-                                                />
-                                            ) : message.isRead ? (
-                                                <MailOpen
-                                                    size={15}
-                                                    className="text-t3"
-                                                />
-                                            ) : (
-                                                <Mail
-                                                    size={15}
-                                                    className="text-primary"
-                                                />
-                                            )}
-                                            <StatusBadge
-                                                isRead={message.isRead}
-                                            />
-                                        </div>
+                        </thead>
+                        <tbody>
+                            {isLoading ? (
+                                <tr>
+                                    <td
+                                        colSpan="5"
+                                        className="py-12 text-center text-t3"
+                                    >
+                                        <Loader2
+                                            size={24}
+                                            className="animate-spin mx-auto mb-2"
+                                            style={{ color: "#185FA5" }}
+                                        />
+                                        Loading messages...
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ) : error ? (
+                                <tr>
+                                    <td
+                                        colSpan="5"
+                                        className="py-12 text-center text-red-600 text-sm"
+                                    >
+                                        {error}
+                                    </td>
+                                </tr>
+                            ) : filteredMessages.length === 0 ? (
+                                <tr>
+                                    <td
+                                        colSpan="5"
+                                        className="py-12 text-center text-t3 text-sm"
+                                    >
+                                        <MessageSquare
+                                            size={24}
+                                            className="mx-auto mb-2 text-t3"
+                                        />
+                                        No messages found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredMessages.map((message) => (
+                                    <tr
+                                        key={message.id}
+                                        onClick={() =>
+                                            handleOpenMessage(message)
+                                        }
+                                        className={`border-b border-border hover:bg-subtle transition-colors cursor-pointer ${
+                                            !message.isRead ? "font-medium" : ""
+                                        }`}
+                                    >
+                                        <td className="p-4 text-t1">
+                                            <div className="flex flex-col">
+                                                <span>{message.name}</span>
+                                                <span className="text-xs text-t3 font-normal">
+                                                    {message.email}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-t1 text-sm">
+                                            {message.subject}
+                                        </td>
+                                        <td className="p-4 text-t2 text-sm max-w-xs truncate">
+                                            {message.message}
+                                        </td>
+                                        <td className="p-4 text-t2 text-sm whitespace-nowrap">
+                                            {formatDate(message.createdAt)}
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                {markingId === message.id ? (
+                                                    <Loader2
+                                                        size={16}
+                                                        className="animate-spin text-t3"
+                                                    />
+                                                ) : message.isRead ? (
+                                                    <MailOpen
+                                                        size={15}
+                                                        className="text-t3"
+                                                    />
+                                                ) : (
+                                                    <Mail
+                                                        size={15}
+                                                        className="text-primary"
+                                                    />
+                                                )}
+                                                <StatusBadge
+                                                    isRead={message.isRead}
+                                                />
+                                                {message.isReplied && (
+                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                                        <CheckCircle2
+                                                            size={12}
+                                                        />
+                                                        Replied
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {/* Detail modal */}
@@ -353,6 +427,7 @@ export const AdminContactUs = () => {
                 <MessageModal
                     message={selectedMessage}
                     onClose={() => setSelectedMessage(null)}
+                    onReply={handleReply}
                 />
             )}
         </div>

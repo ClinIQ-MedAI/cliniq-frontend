@@ -398,8 +398,7 @@ export default function Dashboard() {
             <div className="db-welcome">
                 <div>
                     <h1 className="db-welcome-name">
-                        {getGreeting()}, {user?.user?.firstName}{" "}
-                        {user?.user?.lastName}
+                        {getGreeting()}, {user?.firstName} {user?.lastName}
                     </h1>
                     <p className="db-welcome-sub">
                         Overview of appointments, patients, and alerts

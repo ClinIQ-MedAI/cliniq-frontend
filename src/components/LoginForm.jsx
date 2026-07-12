@@ -20,19 +20,28 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
     } = useForm();
     const { loginData } = useContext(UserContext);
     const navigate = useNavigate();
-
     async function handleLoginSubmit(data) {
         try {
-            //TODO: Edit Logic When Finish
             data.otpCode = null;
             const response = await api.post(API_ENDPOINTS.Auth.login, data);
-            const user = response.data;
-            console.log(user);
-            loginData(user, user.token, data.email);
-            if (user.roles.length > 0 && user.roles.includes("Admin")) {
+            const authData = response.data;
+
+            if (authData.patient) {
+                toast.error(
+                    "Patient accounts aren't supported on the web app yet.",
+                );
+                return;
+            }
+
+            const normalizedUser = loginData(authData);
+
+            if (
+                normalizedUser.role === "Admin" ||
+                normalizedUser.role === "SuperAdmin"
+            ) {
                 navigate("/admin/dashboard");
-            } else if (user.doctor) {
-                switch (user.doctor.status) {
+            } else if (normalizedUser.role === "Doctor") {
+                switch (normalizedUser.doctor.status) {
                     case "INCOMPLETE_PROFILE":
                         navigate("/survey");
                         break;
@@ -49,10 +58,12 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
                     default:
                         break;
                 }
+            } else {
+                // doctor/patient/admin all null -> brand new account, no profile yet
+                navigate("/survey");
             }
 
             toast.success("user logged in successfully");
-
             setOpenLoginForm(false);
         } catch (error) {
             if (error.response) {
@@ -126,7 +137,7 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             onClick={() => setOpenLoginForm(false)}
-            className="fixed flex z-100 justify-center items-center top-0 left-0 w-full h-full bg-[#00000094]"
+            className="fixed flex z-100 justify-center items-center top-0 left-0 w-full h-full bg-[#00000094] overflow-y-auto py-6 px-4"
         >
             <motion.form
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -140,17 +151,17 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
                 }}
                 onClick={(e) => e.stopPropagation()}
                 onSubmit={handleSubmit(handleLoginSubmit)}
-                className="flex  mx-10   relative items-center text-(--default-color) rounded-xl overflow-hidden"
+                className="flex w-full max-w-7xl relative items-center text-(--default-color) rounded-xl overflow-hidden max-h-[90vh] overflow-y-auto my-auto"
             >
                 <div
-                    className="absolute right-2 top-2 cursor-pointer"
+                    className="absolute right-2 top-2 cursor-pointer z-10"
                     onClick={() => setOpenLoginForm(false)}
                 >
                     <X className="text-red-500" />
                 </div>
-                <div className="flex w-7xl">
+                <div className="flex flex-col lg:flex-row w-full">
                     {/* Left */}
-                    <div className="bg-(--primary-color) text-xl hidden relative lg:block w-2/5 p-10 text-white">
+                    <div className="bg-(--primary-color) text-xl hidden relative lg:block w-2/5 p-6 sm:p-10 text-white overflow-hidden">
                         <span className="font-bold">Hospital</span> logo
                         <img
                             src={Doctor1}
@@ -165,8 +176,8 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
                     </div>
 
                     {/* Right */}
-                    <div className="bg-(--white-color) p-10 w-full lg:w-3/5 pb-15">
-                        <h2 className="text-(--default-color) text-3xl font-semibold">
+                    <div className="bg-(--white-color) p-6 sm:p-10 w-full lg:w-3/5 pb-8 sm:pb-15">
+                        <h2 className="text-(--default-color) text-2xl sm:text-3xl font-semibold">
                             Log In Your Account
                         </h2>
 
@@ -219,7 +230,7 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
                             <button
                                 type={"submit"}
                                 disabled={isSubmitting}
-                                className={`primary text-center md:mt-8 w-75 mx-auto justify-center rounded-lg border-2 border-(--primary-color) px-6 py-4 cursor-pointer gap-2 items-center flex disabled:bg-gray-500!`}
+                                className={`primary text-center md:mt-8 mt-6 w-full max-w-75 mx-auto justify-center rounded-lg border-2 border-(--primary-color) px-6 py-4 cursor-pointer gap-2 items-center flex disabled:bg-gray-500!`}
                             >
                                 Login
                                 {isSubmitting && (
@@ -227,7 +238,7 @@ export const LoginForm = ({ setOpenLoginForm, setOpenSignUpForm }) => {
                                 )}
                             </button>
 
-                            <p className="flex justify-center items-center mt-20">
+                            <p className="flex flex-wrap justify-center items-center gap-1 mt-8 md:mt-20">
                                 Don't have an account ?
                                 <button
                                     type="button"

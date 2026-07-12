@@ -33,6 +33,7 @@ const STATUS_MAP = { 0: "SENT", 1: "DELIVERED", 2: "READ" };
 function normalizeRestMessage(raw) {
     return {
         ...raw,
+        id: raw.id ?? raw.Id ?? raw.messageId ?? raw.MessageId,
         senderType: SENDER_TYPE_MAP[raw.senderType] ?? raw.senderType,
         status: STATUS_MAP[raw.status] ?? raw.status,
     };
@@ -359,7 +360,11 @@ export default function ChatPage() {
                 { content },
             );
             const message = normalizeRestMessage(data);
-            setMessages((prev) => [...prev, message]);
+            setMessages((prev) =>
+                prev.some((m) => String(m.id) === String(message.id))
+                    ? prev
+                    : [...prev, message],
+            );
             setConversations((prev) =>
                 prev.map((c) =>
                     c.id === selectedId
@@ -504,16 +509,16 @@ export default function ChatPage() {
                                 type="submit"
                                 disabled={!draft.trim() || sending}
                                 className="w-10 h-10 shrink-0 rounded-full bg-primary text-white flex items-center justify-center
-                                disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity cursor-pointer"
+disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity cursor-pointer"
                                 aria-label="Send message"
                             >
                                 {sending ? (
                                     <Loader2
-                                        className="animate-spin"
+                                        className="animate-spin shrink-0"
                                         size={18}
                                     />
                                 ) : (
-                                    <Send size={18} />
+                                    <Send size={18} className=" shrink-0" />
                                 )}
                             </button>
                         </form>

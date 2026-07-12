@@ -7,9 +7,9 @@ import API_ENDPOINTS from "../apis/endpoints";
 
 /* ─── skeleton for a single stat card ────────────────────────── */
 const StatCardSkeleton = () => (
-    <div className="bg-card/150 p-6 rounded-xl border border-border shadow-sm animate-pulse">
+    <div className="bg-card/150 p-4 sm:p-6 rounded-xl border border-border shadow-sm animate-pulse">
         <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-subtle" />
+            <div className="w-12 h-12 rounded-lg bg-subtle shrink-0" />
             <div className="flex-1 space-y-2">
                 <div className="h-3 w-24 rounded bg-subtle" />
                 <div className="h-6 w-12 rounded bg-subtle" />
@@ -20,13 +20,13 @@ const StatCardSkeleton = () => (
 
 /* ─── real stat card ──────────────────────────────────────────── */
 const StatCard = ({ Icon, label, value }) => (
-    <div className="bg-card p-6 rounded-xl border border-border shadow-sm transition-colors duration-300">
+    <div className="bg-card p-4 sm:p-6 rounded-xl border border-border shadow-sm transition-colors duration-300">
         <div className="flex items-center gap-4">
-            <div className="p-3 bg-primary/10 text-primary rounded-lg">
+            <div className="p-3 bg-primary/10 text-primary rounded-lg shrink-0">
                 <Icon size={24} />
             </div>
-            <div>
-                <p className="text-sm text-t2 font-medium">{label}</p>
+            <div className="min-w-0">
+                <p className="text-sm text-t2 font-medium truncate">{label}</p>
                 <p className="text-2xl font-bold text-t1">{value}</p>
             </div>
         </div>
@@ -62,8 +62,7 @@ export const AdminDashboard = () => {
 
                 const doctors = doctorsRes.data ?? [];
                 const patients = patientsRes.data ?? [];
-                // Response shape: { items: [...], totalCount }
-                const messages = messagesRes.data?.items ?? [];
+                const messages = messagesRes.data ?? [];
                 setStats({
                     totalDoctors: doctors.length,
                     totalPatients: patients.length,
@@ -82,8 +81,8 @@ export const AdminDashboard = () => {
     }, []);
 
     return (
-        <div className="flex w-full bg-page font-sans transition-colors duration-300">
-            <main className="flex-1 p-8 overflow-y-auto">
+        <div className="flex w-full bg-page font-sans transition-colors duration-300 min-h-screen">
+            <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto">
                 <AdminDashboardHeader />
 
                 {statsError && (
@@ -93,7 +92,7 @@ export const AdminDashboard = () => {
                 )}
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
                     {isLoadingStats ? (
                         <>
                             <StatCardSkeleton />
@@ -136,7 +135,7 @@ export const AdminDashboard = () => {
                 ) : (
                     <Link
                         to="/admin/doctors"
-                        className="flex items-center justify-between p-6 bg-card rounded-xl border border-border shadow-sm hover:bg-subtle transition-colors"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-6 bg-card rounded-xl border border-border shadow-sm hover:bg-subtle transition-colors"
                     >
                         <div>
                             <h3 className="font-bold text-t1">

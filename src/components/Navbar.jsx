@@ -9,7 +9,6 @@ export const Navbar = ({ setOpenSignUpForm, setOpenLoginForm }) => {
     const { pathname } = useLocation();
     const [openMenu, setOpenMenu] = useState(false);
 
-    console.log(pathname);
     return (
         <header className="header">
             <div className="container flex justify-between px-(--padding-inline)">
@@ -59,8 +58,8 @@ export const Navbar = ({ setOpenSignUpForm, setOpenLoginForm }) => {
                                         About us
                                     </Link>
                                     <Link
-                                        className={`${pathname === "/contact" ? "active" : ""} header-link`}
-                                        to={"/contact"}
+                                        className={`${pathname === "/contact-us" ? "active" : ""} header-link`}
+                                        to={"/contact-us"}
                                     >
                                         Contact us
                                     </Link>
@@ -110,8 +109,8 @@ export const Navbar = ({ setOpenSignUpForm, setOpenLoginForm }) => {
                             About us
                         </Link>
                         <Link
-                            className={`${pathname === "/contact" ? "active" : ""} header-link`}
-                            to={"/contact"}
+                            className={`${pathname === "/contact-us" ? "active" : ""} header-link`}
+                            to={"/contact-us"}
                         >
                             Contact us
                         </Link>

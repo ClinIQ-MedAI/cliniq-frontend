@@ -20,13 +20,14 @@ const API_ENDPOINTS = {
         getAllSchedules: "/doctor/schedules",
         getPerformanceData: `/doctor/performance`,
         Scans: {
-            review: (scanId) => `/Scans/${scanId}/review`,
-            getByPatient: (patientId) => `/Scans/patient/${patientId}`,
+            review: (scanId) => `/ai/Scans/${scanId}/review`,
+            getByPatient: (patientId) => `/ai/Scans/patient/${patientId}`,
         },
         Prescriptions: {
             confirm: (prescriptionId) =>
-                `/Prescriptions/${prescriptionId}/confirm`,
-            getByPatient: (patientId) => `/Prescriptions/patient/${patientId}`,
+                `/ai/Prescriptions/${prescriptionId}/confirm`,
+            getByPatient: (patientId) =>
+                `/ai/Prescriptions/patient/${patientId}`,
         },
     },
     Admin: {
@@ -66,6 +67,23 @@ const API_ENDPOINTS = {
         Contact: {
             getAllMessages: "/admin/contact-us",
             markAsRead: (messageId) => `/admin/contact-us/${messageId}/read`,
+            reply: (id) => `/admin/contact-us/${id}/reply`,
+        },
+
+        Admins: {
+            getAll: "/admin/admins",
+            create: "/admin/admins",
+            getById: (id) => `/admin/admins/${id}`,
+            delete: (id) => `/admin/admins/${id}`,
+            updateStatus: (id) => `/admin/admins/${id}/status`,
+        },
+        Roles: {
+            getAll: "/admin/Roles",
+            create: "/admin/Roles",
+            getById: (id) => `/admin/Roles/${id}`,
+            update: (id) => `/admin/Roles/${id}`,
+            delete: (id) => `/admin/Roles/${id}`,
+            getAllPermissions: "/admin/Roles/permissions",
         },
     },
     Bookings: {

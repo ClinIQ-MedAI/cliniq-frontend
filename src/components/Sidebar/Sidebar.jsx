@@ -15,12 +15,16 @@ const NAV_MAIN = [
         to: "/appointments",
         icon: "ti-calendar-event",
         label: "Appointments",
-        badge: 3,
     },
     {
         to: "/messages",
         icon: "ti-message-circle",
         label: "Messages",
+    },
+    {
+        to: "/patients",
+        icon: "ti-user-circle",
+        label: "Patients",
     },
 ];
 
@@ -105,13 +109,11 @@ function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
             <div className="sb-footer">
                 <div className="sb-user">
                     <div className="sb-av">
-                        {initials(
-                            user?.user?.firstName + " " + user?.user?.lastName,
-                        )}
+                        {initials(user?.firstName + " " + user?.lastName)}
                     </div>
                     <div className="sb-user-info ">
                         <div className="sb-user-name">
-                            {user?.user?.firstName} {user?.user?.lastName ?? ""}
+                            {user?.firstName} {user?.lastName ?? ""}
                         </div>
                         <div className="sb-user-role">Cardiologist</div>
                     </div>

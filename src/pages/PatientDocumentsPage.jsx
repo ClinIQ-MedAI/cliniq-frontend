@@ -17,21 +17,25 @@ import api from "../apis/api";
 
 /* ---------- helpers ---------- */
 const STATUS_STYLES = {
-    Pending: "bg-yellow-100 text-yellow-700",
+    pending: "bg-yellow-100 text-yellow-700",
     completed: "bg-green-100 text-green-700",
     failed: "bg-red-100 text-red-700",
     rejected: "bg-orange-100 text-orange-700",
+    needs_review: "bg-orange-100 text-orange-700",
 };
 
-const StatusPill = ({ status }) => (
-    <span
-        className={`text-xs font-medium px-2 py-1 rounded-full ${
-            STATUS_STYLES[status] ?? "bg-gray-100 text-gray-600"
-        }`}
-    >
-        {status ?? "Unknown"}
-    </span>
-);
+const StatusPill = ({ status }) => {
+    const key = status?.toLowerCase();
+    return (
+        <span
+            className={`text-xs font-medium px-2 py-1 rounded-full ${
+                STATUS_STYLES[key] ?? "bg-gray-100 text-gray-600"
+            }`}
+        >
+            {status ?? "Unknown"}
+        </span>
+    );
+};
 
 const formatDate = (iso) =>
     iso
@@ -167,11 +171,212 @@ const AIResultView = ({ scan }) => {
         </div>
     );
 };
+
+/* ---------- one extracted medication (success shape) ---------- */
+const MedicationCard = ({ med }) => {
+    const arabicLine = [med.dosage, med.schedule_ar ?? med.frequency]
+        .filter(Boolean)
+        // dosage and schedule_ar/frequency are sometimes identical strings —
+        // don't repeat the same text twice
+        .filter((v, i, arr) => arr.indexOf(v) === i)
+        .join(" · ");
+
+    return (
+        <div className="border border-border rounded-lg p-3 bg-card">
+            <div className="flex items-start justify-between gap-2">
+                <div className="font-medium text-t1 text-sm">
+                    {med.drug_extracted ?? med.drug ?? "Unknown medication"}
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                    {med.official_match === true ? (
+                        <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                            <Check size={11} /> Verified
+                        </span>
+                    ) : med.official_match === false ? (
+                        <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+                            <AlertCircle size={11} /> Not matched
+                        </span>
+                    ) : null}
+                    {typeof med.confidence_score === "number" && (
+                        <span
+                            className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                med.confidence_score >= 85
+                                    ? "bg-green-100 text-green-700"
+                                    : med.confidence_score >= 60
+                                      ? "bg-amber-100 text-amber-700"
+                                      : "bg-red-100 text-red-700"
+                            }`}
+                        >
+                            {med.confidence_score}%
+                        </span>
+                    )}
+                </div>
+            </div>
+            {arabicLine && (
+                <div dir="rtl" className="text-sm text-t2 mt-1.5 text-right">
+                    {arabicLine}
+                </div>
+            )}
+        </div>
+    );
+};
+
+/* ---------- prescription AI result: the backend response comes in two shapes ----------
+   Failure shape:
+     { success: false, image_type, error, detections: [], ai_findings: {},
+       input_gate: { passed, action, reason, scores: {...} } }
+   Success shape (note: the useful fields live INSIDE ai_findings, not top-level):
+     { success: true, image_type, detections: [],
+       ai_findings: { primary_diagnosis, medications: [{ drug_extracted, drug,
+         dosage, frequency, schedule_ar, confidence_score, official_match }],
+         raw_vlm_output, notes },
+       report_data: { total_medications, verified_medications, medications },
+       input_gate: {...} }
+*/
+const PrescriptionAIResultView = ({ prescription }) => {
+    const result = prescription.rawParsedText;
+    if (!result)
+        return <div className="text-sm text-t3">No result available.</div>;
+
+    const gate = result.input_gate;
+    const findings = result.ai_findings ?? {};
+    const report = result.report_data;
+
+    // Prefer the nested ai_findings fields; fall back to top-level in case
+    // some other endpoint ever returns this flatter.
+    const primaryDiagnosis =
+        findings.primary_diagnosis ?? result.primary_diagnosis;
+    const medications = Array.isArray(findings.medications)
+        ? findings.medications
+        : Array.isArray(result.medications)
+          ? result.medications
+          : [];
+    const notes = findings.notes ?? result.notes;
+    const hasMedications = medications.length > 0;
+
+    return (
+        <div className="space-y-3">
+            {result.success === false && (
+                <div className="flex items-start gap-2 text-sm text-red-600 bg-red-50 rounded-lg p-2.5">
+                    <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                    <span>
+                        AI extraction failed
+                        {result.error ? `: ${result.error}` : "."}
+                    </span>
+                </div>
+            )}
+
+            {primaryDiagnosis && (
+                <div
+                    dir="rtl"
+                    className="text-sm text-t1 bg-subtle rounded-lg p-3 text-right leading-relaxed"
+                >
+                    {primaryDiagnosis}
+                </div>
+            )}
+
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+                {gate && (
+                    <span
+                        className={`px-2 py-0.5 rounded-full font-medium ${
+                            gate.passed
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                        }`}
+                    >
+                        {gate.passed
+                            ? "Passed quality gate"
+                            : "Failed quality gate"}
+                    </span>
+                )}
+                {gate?.action && (
+                    <span className="text-t3">Action: {gate.action}</span>
+                )}
+                {gate?.reason && (
+                    <span className="text-t3">— {gate.reason}</span>
+                )}
+                {report && typeof report.total_medications === "number" && (
+                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                        {report.verified_medications ?? 0}/
+                        {report.total_medications} verified
+                    </span>
+                )}
+            </div>
+
+            {hasMedications ? (
+                <div className="space-y-2">
+                    <div className="text-xs font-medium text-t2">
+                        Medications ({medications.length})
+                    </div>
+                    {medications.map((med, i) => (
+                        <MedicationCard key={i} med={med} />
+                    ))}
+                </div>
+            ) : result.detections?.length > 0 ? (
+                <div>
+                    <div className="text-xs font-medium text-t2 mb-1">
+                        Detected items
+                    </div>
+                    <ul className="text-sm text-t2 list-disc pl-4 space-y-0.5">
+                        {result.detections.map((d, i) => (
+                            <li key={i}>
+                                {typeof d === "string"
+                                    ? d
+                                    : (d.label ??
+                                      d.name ??
+                                      d.condition ??
+                                      "Unrecognized detection — see raw response")}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ) : (
+                result.success !== false &&
+                !primaryDiagnosis && (
+                    <p className="text-sm text-t3">
+                        No medications were detected by the AI for this image.
+                    </p>
+                )
+            )}
+
+            {notes && <p className="text-xs text-t3 italic">{notes}</p>}
+
+            <details className="text-xs text-t3">
+                <summary className="cursor-pointer">Raw AI response</summary>
+                <pre className="bg-subtle rounded-lg p-3 overflow-x-auto whitespace-pre-wrap mt-1">
+                    {JSON.stringify(result, null, 2)}
+                </pre>
+            </details>
+        </div>
+    );
+};
+
 const URGENCY_META = {
     ROUTINE: { label: "Routine", pill: "bg-green-100 text-green-700" },
     URGENT: { label: "Urgent", pill: "bg-orange-100 text-orange-700" },
     CRITICAL: { label: "Critical", pill: "bg-red-100 text-red-700" },
     REJECTED: { label: "Rejected", pill: "bg-gray-100 text-gray-600" },
+};
+
+const URGENCY_BANNER_STYLES = {
+    CRITICAL: "bg-red-50 border-red-200 text-red-700",
+    URGENT: "bg-orange-50 border-orange-200 text-orange-700",
+};
+
+// Only CRITICAL/URGENT get a banner — routine results don't need to compete
+// for attention above the fold.
+const UrgencyBanner = ({ urgency }) => {
+    const style = URGENCY_BANNER_STYLES[urgency];
+    if (!style) return null;
+    return (
+        <div
+            className={`flex items-center gap-2 border rounded-lg px-4 py-3 mb-4 font-medium ${style}`}
+        >
+            <AlertCircle size={18} className="shrink-0" />
+            {URGENCY_META[urgency]?.label ?? urgency} finding — review before
+            confirming
+        </div>
+    );
 };
 
 const FindingFlag = ({ label, value }) => (
@@ -190,7 +395,7 @@ const ScanDetail = ({ scan, onBack, onReviewed }) => {
     const [error, setError] = useState("");
 
     // TODO: confirm the real field name for the logged-in doctor's DoctorProfile.Id
-    const doctorId = user?.user?.doctorId ?? user?.doctorId;
+    const doctorId = user?.id;
 
     const handleReview = async () => {
         setError("");
@@ -224,6 +429,8 @@ const ScanDetail = ({ scan, onBack, onReviewed }) => {
             >
                 <ArrowLeft size={14} /> Back to list
             </button>
+
+            <UrgencyBanner urgency={scan.aiAnalysisResult?.urgency} />
 
             <div className="flex items-start justify-between mb-4">
                 <div>
@@ -292,30 +499,64 @@ const ScanDetail = ({ scan, onBack, onReviewed }) => {
     );
 };
 
+/* ---------- one editable medication row (used in the confirm form) ---------- */
+const EditableMedicationRow = ({ med, onChange, onRemove }) => (
+    <div className="border border-border rounded-lg p-3 bg-card space-y-2">
+        <div className="flex items-center gap-2">
+            <input
+                value={med.drug_extracted ?? med.drug ?? ""}
+                onChange={(e) =>
+                    onChange({ ...med, drug_extracted: e.target.value })
+                }
+                placeholder="Drug name"
+                className="flex-1 border border-border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <button
+                type="button"
+                onClick={onRemove}
+                className="text-xs text-red-500 hover:text-red-700 shrink-0 px-2"
+            >
+                Remove
+            </button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+            <input
+                value={med.dosage ?? ""}
+                onChange={(e) => onChange({ ...med, dosage: e.target.value })}
+                placeholder="Dosage"
+                className="border border-border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <input
+                value={med.frequency ?? ""}
+                onChange={(e) =>
+                    onChange({ ...med, frequency: e.target.value })
+                }
+                placeholder="Frequency"
+                className="border border-border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+        </div>
+    </div>
+);
+
 /* ---------- prescription detail panel ---------- */
 const PrescriptionDetail = ({ prescription, onBack, onConfirmed }) => {
     const { user } = useUser();
     const [notes, setNotes] = useState(prescription.doctorNotes ?? "");
-    const [medsText, setMedsText] = useState(
-        JSON.stringify(prescription.medications ?? [], null, 2),
+    const [medications, setMedications] = useState(
+        prescription.medications ??
+            prescription.rawParsedText?.ai_findings?.medications ??
+            [],
     );
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
 
     // TODO: confirm the real field name for the logged-in doctor's DoctorProfile.Id
-    const doctorId = user?.user?.doctorId ?? user?.doctorId;
+    const doctorId = user?.id;
 
     const handleConfirm = async () => {
         setError("");
         if (!doctorId) {
             setError("Could not determine your doctor profile ID.");
-            return;
-        }
-        let medications;
-        try {
-            medications = JSON.parse(medsText);
-        } catch {
-            setError("Medications must be valid JSON.");
             return;
         }
         setSaving(true);
@@ -373,17 +614,13 @@ const PrescriptionDetail = ({ prescription, onBack, onConfirmed }) => {
                 <div className="text-sm font-medium text-t1 mb-2">
                     AI parsed text
                 </div>
-                {prescription.aiJobStatus === "Pending" ? (
+                {prescription.aiJobStatus?.toLowerCase() === "pending" ? (
                     <div className="flex items-center gap-2 text-sm text-t3">
                         <Loader2 size={14} className="animate-spin" />
                         Still processing — check back shortly.
                     </div>
-                ) : prescription.rawParsedText ? (
-                    <pre className="text-xs bg-subtle rounded-lg p-3 overflow-x-auto whitespace-pre-wrap">
-                        {JSON.stringify(prescription.rawParsedText, null, 2)}
-                    </pre>
                 ) : (
-                    <div className="text-sm text-t3">No result available.</div>
+                    <PrescriptionAIResultView prescription={prescription} />
                 )}
             </div>
 
@@ -391,16 +628,42 @@ const PrescriptionDetail = ({ prescription, onBack, onConfirmed }) => {
                 <label className="text-sm font-medium text-t1 mb-1 block">
                     Medications (editable)
                 </label>
-                <textarea
-                    value={medsText}
-                    onChange={(e) => setMedsText(e.target.value)}
-                    rows={6}
-                    className="w-full border border-border rounded-lg p-3 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-primary/40"
-                />
-                <p className="text-xs text-t3 mt-1">
+                <p className="text-xs text-t3 mb-2">
                     Review what the AI extracted and correct it before
                     confirming.
                 </p>
+                <div className="space-y-2">
+                    {medications.map((med, i) => (
+                        <EditableMedicationRow
+                            key={i}
+                            med={med}
+                            onChange={(updated) =>
+                                setMedications((prev) =>
+                                    prev.map((m, idx) =>
+                                        idx === i ? updated : m,
+                                    ),
+                                )
+                            }
+                            onRemove={() =>
+                                setMedications((prev) =>
+                                    prev.filter((_, idx) => idx !== i),
+                                )
+                            }
+                        />
+                    ))}
+                </div>
+                <button
+                    type="button"
+                    onClick={() =>
+                        setMedications((prev) => [
+                            ...prev,
+                            { drug_extracted: "", dosage: "", frequency: "" },
+                        ])
+                    }
+                    className="mt-2 text-sm text-primary hover:underline"
+                >
+                    + Add medication
+                </button>
             </div>
 
             <div className="mb-4">

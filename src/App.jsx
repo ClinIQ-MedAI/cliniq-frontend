@@ -24,15 +24,12 @@ import AvailabilityPage from "./pages/AvailabilityPage";
 import { AdminBookings } from "./pages/AdminBookingPage";
 import { AdminContactUs } from "./pages/AdminContactUs";
 import PatientDocuments from "./pages/PatientDocumentsPage";
-
-function Patients() {
-    return (
-        <div>
-            <h2>Patients</h2>
-            <p>Patients list placeholder</p>
-        </div>
-    );
-}
+import GeneralContactUs from "./pages/GeneralContactUs";
+import Patients from "./pages/PatientsPage";
+import { RequirePermission } from "./components/guards/RequirePermissionGuard";
+import AdminAdmins from "./pages/AdminAdminsPage";
+import AdminRoles from "./pages/AdminRolesPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 
 function Announcements() {
     return (
@@ -59,6 +56,7 @@ function App() {
     return (
         <>
             <Routes>
+                <Route path="/contact-us" element={<GeneralContactUs />} />
                 <Route
                     element={
                         <DoctorLayout
@@ -78,46 +76,87 @@ function App() {
                             />
                         }
                     />
-                    <Route
-                        path="/forgot-password"
-                        element={<ForgotPasswordPage />}
-                    />
                 </Route>
+                <Route
+                    path="/forgot-password"
+                    element={<ForgotPasswordPage />}
+                />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/verify-email" element={<VerifyEmailPage />} />
                 <Route element={<Authentication />}>
+                    <Route path="/survey" element={<Survey />} />
                     <Route
-                        element={<AuthorizationRoleGuard allowed={["Admin"]} />}
+                        path="/verification-status"
+                        element={<VerificationStatus />}
+                    />
+
+                    <Route
+                        element={
+                            <AuthorizationRoleGuard
+                                allowed={["Admin", "SuperAdmin"]}
+                            />
+                        }
                     >
                         <Route element={<AdminSidebar />}>
+                            <Route
+                                path="/admin/admins"
+                                element={<AdminAdmins />}
+                            />
+                            <Route
+                                path="/admin/roles"
+                                element={<AdminRoles />}
+                            />
                             <Route
                                 path="/admin/dashboard"
                                 element={<AdminDashboard />}
                             />
+
                             <Route
-                                path="/admin/patients"
-                                element={<AdminPatients />}
-                            />
+                                element={
+                                    <RequirePermission permission="Permissions.Patients.View" />
+                                }
+                            >
+                                <Route
+                                    path="/admin/patients"
+                                    element={<AdminPatients />}
+                                />
+                            </Route>
+
                             <Route
-                                path="/admin/doctors"
-                                element={<AdminDoctors />}
-                            />
+                                element={
+                                    <RequirePermission permission="Permissions.Doctors.View" />
+                                }
+                            >
+                                <Route
+                                    path="/admin/doctors"
+                                    element={<AdminDoctors />}
+                                />
+                            </Route>
+
                             <Route
-                                path="/admin/bookings"
-                                element={<AdminBookings />}
-                            />
+                                element={
+                                    <RequirePermission permission="Permissions.Bookings.View" />
+                                }
+                            >
+                                <Route
+                                    path="/admin/bookings"
+                                    element={<AdminBookings />}
+                                />
+                            </Route>
+
                             <Route
-                                path="/admin/contact-us"
-                                element={<AdminContactUs />}
-                            />
+                                element={
+                                    <RequirePermission permission="Permissions.Contacts.Manage" />
+                                }
+                            >
+                                <Route
+                                    path="/admin/contact-us"
+                                    element={<AdminContactUs />}
+                                />
+                            </Route>
                         </Route>
                     </Route>
-                </Route>
-                <Route path="/survey" element={<Survey />} />
-                <Route
-                    path="/verification-status"
-                    element={<VerificationStatus />}
-                />
-                <Route element={<Authentication />}>
+
                     <Route
                         element={
                             <AuthorizationRoleGuard allowed={["Doctor"]} />

@@ -1,28 +1,37 @@
 import { Mail, ArrowLeft, KeyRound } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../apis/api";
 import API_ENDPOINTS from "../apis/endpoints";
 
 export const ForgotPasswordPage = () => {
     // TODO: state, handleSubmit, loading, error, success... هتضيفهم انت
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+
     const [error, setError] = useState();
     const [success, setSuccess] = useState(null);
     const handleSubmit = async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData);
+        debugger;
         if (!data.email) {
             setError({ email: "email is required" });
+            return;
         }
+        setLoading(true);
+        setError({});
         try {
-            const response = await api.post(
-                API_ENDPOINTS.Auth.forgotPassword,
-                data,
-            );
+            await api.post(API_ENDPOINTS.Auth.forgotPassword, data);
+            setSuccess(true);
+            navigate("/reset-password", { state: { email: data.email } });
         } catch (error) {
-            setError({ global: error.response.data.message });
+            setError({
+                global: error.response?.data?.message || "Something went wrong",
+            });
+        } finally {
+            setLoading(false);
         }
     };
     return (
@@ -73,6 +82,7 @@ export const ForgotPasswordPage = () => {
                         {/* Submit Button */}
                         <button
                             type="submit"
+                            disabled={loading}
                             className="w-full bg-primary text-white rounded-xl py-2.5 text-sm font-medium hover:opacity-90 active:scale-[0.99] transition disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             send reset mail
@@ -82,7 +92,7 @@ export const ForgotPasswordPage = () => {
                     {/* Back to login */}
                     <div className="mt-6 text-center">
                         <Link
-                            to="/login"
+                            to="/"
                             className="inline-flex items-center gap-1.5 text-sm text-t2 hover:text-primary transition"
                         >
                             <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
