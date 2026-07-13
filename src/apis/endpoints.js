@@ -26,7 +26,11 @@ const API_ENDPOINTS = {
         },
     },
     Admin: {
-        Booking: { getAllBookings: "/admin/bookings" },
+        Booking: {
+            getAllBookings: "/admin/bookings",
+            updateBookingStatus: (bookingId) =>
+                `/admin/bookings/${bookingId}/status`,
+        },
         Doctor: {
             getListOfDoctorsOrCreateDoctor: "/admin/Doctors",
             updateDoctorStatus: (doctorId) =>
