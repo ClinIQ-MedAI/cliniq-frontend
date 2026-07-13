@@ -99,13 +99,22 @@ function App() {
                     >
                         <Route element={<AdminSidebar />}>
                             <Route
-                                path="/admin/admins"
-                                element={<AdminAdmins />}
-                            />
+                                element={
+                                    <RequirePermission
+                                        permission={"Permissions.Admins.View"}
+                                    />
+                                }
+                            >
+                                <Route
+                                    path="/admin/admins"
+                                    element={<AdminAdmins />}
+                                />
+                            </Route>
                             <Route
                                 path="/admin/roles"
                                 element={<AdminRoles />}
                             />
+
                             <Route
                                 path="/admin/dashboard"
                                 element={<AdminDashboard />}
