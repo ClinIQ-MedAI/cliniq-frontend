@@ -234,7 +234,7 @@ const MedicationCard = ({ med }) => {
        input_gate: {...} }
 */
 const PrescriptionAIResultView = ({ prescription }) => {
-    const result = prescription.rawParsedText;
+    const result = prescription.aiAnalysisResult;
     if (!result)
         return <div className="text-sm text-t3">No result available.</div>;
 
@@ -543,7 +543,7 @@ const PrescriptionDetail = ({ prescription, onBack, onConfirmed }) => {
     const [notes, setNotes] = useState(prescription.doctorNotes ?? "");
     const [medications, setMedications] = useState(
         prescription.medications ??
-            prescription.rawParsedText?.ai_findings?.medications ??
+            prescription.aiAnalysisResult?.ai_findings?.medications ??
             [],
     );
     const [saving, setSaving] = useState(false);
@@ -560,7 +560,7 @@ const PrescriptionDetail = ({ prescription, onBack, onConfirmed }) => {
         setSaving(true);
         try {
             await api.post(
-                API_ENDPOINTS.Doctor.Prescriptions.confirm(prescription.id),
+                API_ENDPOINTS.Doctor.Scans.confirm(prescription.id),
                 { doctorId, medications, doctorNotes: notes },
             );
             onConfirmed();
@@ -596,12 +596,11 @@ const PrescriptionDetail = ({ prescription, onBack, onConfirmed }) => {
                 <StatusPill status={prescription.aiJobStatus} />
             </div>
 
-            {(prescription.prescriptionImageUrl ||
-                prescription.prescriptionImageBase64) && (
+            {(prescription.scanUrl || prescription.scanBase64) && (
                 <img
                     src={
-                        prescription.prescriptionImageUrl ??
-                        `data:image/png;base64,${prescription.prescriptionImageBase64}`
+                        prescription.scanUrl ??
+                        `data:image/png;base64,${prescription.scanBase64}`
                     }
                     alt="Prescription"
                     className="w-full max-h-96 object-contain rounded-lg border border-border bg-subtle mb-4"
@@ -712,14 +711,12 @@ export default function PatientDocuments() {
         setLoading(true);
         setError("");
         try {
-            const [scansRes, prescriptionsRes] = await Promise.all([
-                api.get(API_ENDPOINTS.Doctor.Scans.getByPatient(patientId)),
-                api.get(
-                    API_ENDPOINTS.Doctor.Prescriptions.getByPatient(patientId),
-                ),
-            ]);
-            setScans(scansRes.data ?? []);
-            setPrescriptions(prescriptionsRes.data ?? []);
+            const res = await api.get(
+                API_ENDPOINTS.Doctor.Scans.getByPatient(patientId),
+            );
+            const all = res.data ?? [];
+            setScans(all.filter((d) => d.modality !== "PRESCRIPTION"));
+            setPrescriptions(all.filter((d) => d.modality === "PRESCRIPTION"));
         } catch (err) {
             setError(
                 err?.response?.data?.title ??

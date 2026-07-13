@@ -22,12 +22,7 @@ const API_ENDPOINTS = {
         Scans: {
             review: (scanId) => `/ai/Scans/${scanId}/review`,
             getByPatient: (patientId) => `/ai/Scans/patient/${patientId}`,
-        },
-        Prescriptions: {
-            confirm: (prescriptionId) =>
-                `/ai/Prescriptions/${prescriptionId}/confirm`,
-            getByPatient: (patientId) =>
-                `/ai/Prescriptions/patient/${patientId}`,
+            confirm: (scanId) => `/ai/Scans/${scanId}/confirm`,
         },
     },
     Admin: {
