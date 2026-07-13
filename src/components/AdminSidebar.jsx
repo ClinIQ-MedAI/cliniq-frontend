@@ -49,7 +49,7 @@ const NAV_ITEMS = [
         to: "/admin/admins",
         icon: UserCog,
         label: "Admins",
-        permission: "Permissions.Admin.View",
+        permission: "Permissions.Admins.View",
     },
     {
         to: "/admin/roles",
